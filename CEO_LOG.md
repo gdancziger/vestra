@@ -98,3 +98,10 @@
 - **Verified:** tsc clean. /workspace/vestra-shots/v14-leave.png shows a catch being left. v14-waiting.png shows the next day before arriving: the pin and dock both read "your 🌿 is still here", with no repeated line. v14-arrive.png shows the greeting. v14-first.png shows the first ten seconds for a new visitor.
 - **First ten seconds (seen in v14-first.png):** the dock says "Bar Tabac, stranger", but on the map nothing marks Bar Tabac until you tap Go. A new person sees catches and a ring but no door.
 - **Next hour:** before you set a target, give the nearest door a quiet name on the map (no gold, no beam), so a first-timer's first sight is a real place to walk to.
+
+## 2026-10-21 09:20 ET (entry 15): the nearest door names itself before you choose
+- **Decision:** Entry 14 was verified (tsc clean, v14 shots, committed), so nothing needed finishing. I shipped the planned first-ten-seconds fix. A newcomer saw a ring and catches but no door on the map until they tapped Go, so the first thing they met was a game layer instead of a real place.
+- **Shipped:** Before any target is set, the nearest door shows its name and one quiet line, "a door 58 m from you", centered just above its dot. The dot gets a soft pale halo with no gold and no beam. The label sits above the catches but ignores taps, so the catches stay tappable. If the nearest door already knows you, its own line shows instead of the distance. Once you tap Go, the quiet label goes away and the gold beam takes over.
+- **Refused:** labelling every door at once (it would crowd the map), gold or a beam before you've chosen, and a "start here" tooltip or onboarding card.
+- **Verified:** tsc clean. /workspace/vestra-shots/v15-first.png shows a first visit with Bar Tabac named on the map before anything is tapped. v15-target.png shows that after Go, the quiet label hands off to the gold beam.
+- **Next hour:** a first visit still ends at "stranger". The first arrival should leave one thing the door will say tomorrow, so day two opens on a reason to return. Check what the dock and pin promise after visit 1 and tighten it.

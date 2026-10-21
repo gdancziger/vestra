@@ -1,0 +1,13 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch()
+const ctx = await b.newContext({ viewport:{width:430,height:900}, geolocation:{latitude:40.6866,longitude:-73.9906}, permissions:['geolocation'] })
+const p = await ctx.newPage()
+await p.goto('http://127.0.0.1:8080'); await p.waitForTimeout(6000)
+await p.screenshot({ path:'/workspace/vestra-shots/v15-first.png' })
+await p.fill('.dock input','Gabe'); await p.press('.dock input','Enter'); await p.waitForTimeout(300)
+console.log('nearest label:', await p.$$eval('.door.is-nearest .door-label', e=>e.map(x=>x.textContent.trim())))
+console.log('dock:', await p.$eval('.main', e=>e.textContent))
+await p.click('.main'); await p.waitForTimeout(500)
+console.log('after go nearest count:', (await p.$$('.door.is-nearest')).length)
+await p.screenshot({ path:'/workspace/vestra-shots/v15-target.png' })
+await b.close()

@@ -61,3 +61,7 @@ html,body,#root,.app{margin:0;height:100%;background:var(--night);overflow:hidde
 .knows .person span{color:#9fb0dd}
 .knows .person .noticed{color:#a9c4e8;font-size:10px;padding-left:8px;opacity:.9}
 .knows .person.now span{color:#cfdcff;font-style:italic}
+
+.door.is-nearest:not(.is-known) .door-dot{background:#5b6ea8;border-color:#cfdcff;box-shadow:0 0 0 3px rgba(207,220,255,.18)}
+.door-label small.nearest{color:#b9c8ff}
+.door.is-nearest:not(.is-target) .door-label{left:50%;top:auto;bottom:16px;transform:translateX(-50%);text-align:center;pointer-events:none}
