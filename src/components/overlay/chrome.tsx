@@ -16,12 +16,19 @@ export function Chrome({ pos, doors }: { pos: P; doors: Door[] }) {
   const door = target ?? firstDoor(doors, pos, s.doors, RING_M) ?? near[0] ?? null
   const mem = door ? s.doors[door.id] : undefined
   const isHereFor = (d: Door | null) => !!d && s.hereId === d.id
-  const self = doorSelf(mem, s.name, target && !isHereFor(door) ? s.companion : '', door ? toldBy(s.doors, s.doorNames, s.companion, door.id) : '')
+  const self = doorSelf(mem, s.name, door && !isHereFor(door) ? s.companion : '', door ? toldBy(s.doors, s.doorNames, s.companion, door.id) : '')
   const dist = door ? Math.round(distM(pos, door)) : 0
   const inRing = dist <= RING_M
   const isHere = !!door && here?.id === door.id
   const told = door ? toldBy(s.doors, s.doorNames, s.companion, door.id) : ''
-  const knows = doorKnows(mem, s.name, target && !isHere ? s.companion : '', told)
+  // The door asked for someone yesterday: the one step to answer it sits in the door's own words, not a small link.
+  const asks = !isHere && !s.companion ? self.asks : ''
+  const bringForm = (
+    <form onSubmit={(e) => { e.preventDefault(); s.bring(draft); setDraft(''); setBringing(false) }}>
+      <input autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="their name" />
+    </form>
+  )
+  const knows = doorKnows(mem, s.name, door && !isHere ? s.companion : '', told)
 
   const main = () => {
     if (!door) return
@@ -37,11 +44,7 @@ export function Chrome({ pos, doors }: { pos: P; doors: Door[] }) {
           <>
             <div className="k">you</div>
             <div className="v">{s.name}</div>
-            {bringing ? (
-              <form onSubmit={(e) => { e.preventDefault(); s.bring(draft); setDraft(''); setBringing(false) }}>
-                <input autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="their name" />
-              </form>
-            ) : s.companion ? (
+            {asks ? null : bringing ? bringForm : s.companion ? (
               <div className="sub">with {s.companion}</div>
             ) : (
               <button className="ghost" onClick={() => setBringing(true)}>+ bring someone</button>
@@ -69,6 +72,7 @@ export function Chrome({ pos, doors }: { pos: P; doors: Door[] }) {
         {isHere && s.greeting?.doorId === door?.id && <div className="line says">“{s.greeting.text}”</div>}
         {!isHere && self.expecting && <div className="line expecting">{self.expecting}</div>}
         {!isHere && self.waiting && <div className="line waiting">{self.waiting}</div>}
+        {asks && (bringing ? <div className="ask">{bringForm}</div> : <button className="ask" onClick={() => setBringing(true)}>+ {asks}</button>)}
         {isHere && self.promise && <div className="line promise">{self.promise}</div>}
         {self.lines.slice(0, isHere && s.greeting ? (self.promise ? 0 : 1) : 2).map((l) => <div key={l} className="line">{l}</div>)}
         </>}

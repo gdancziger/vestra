@@ -168,6 +168,8 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
     waiting: waitingNow,
     /** You're bringing someone here: the door has already heard of them before you arrive. */
     expecting,
+    /** The day after the door asked you to bring someone: it asks again, right where you'd answer. Gone once you name them. */
+    asks: m && v >= 4 && !m.heard.length && m.lastDay !== today() && !bringing ? "bringing someone? they'll already be expected" : '',
     /** The last person you brought here, and the day. Kept when you come back alone. */
     withYou: w,
     /** The door's own words for how it knows you. Days, never a count; the first day stays visit 4's gift. */
