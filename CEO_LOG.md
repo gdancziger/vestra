@@ -62,3 +62,10 @@
 - **Refused:** a hover or expand card on the pin (it would repeat the dock), and a carousel that rotates through the lines.
 - **Verified:** tsc clean. /workspace/vestra-shots/v9-expecting.png shows Bien Cuit with one line, "expecting Noa. Bar Tabac told us", and Bar Tabac with "a light is on for you here". v9-arrive.png shows the greeting alone on the pin while the dock keeps the promise.
 - **Next hour:** the merchant side, now that a door knows people across visits. Add a "door's view" for the same door that shows who's a regular and who's expected, with names and days and no counts.
+
+## 2026-10-21 04:20 ET (entry 10): how the door sees it
+- **Decision:** Entry 9 was verified (tsc clean, v9 shots, committed), so nothing needed finishing. Shipped the merchant side I'd deferred three times. Now that doors remember people across visits and carry friends between doors, there's real memory to show from the door's side.
+- **Shipped:** `doorKnows()` gives the door's own list of the people it knows, by name and day: "Gabe, a regular since Oct 8, last came Oct 20" (or "here now"), "Noa came with Gabe Oct 19", and "Ari expected. Gabe told us" for someone you're bringing. The dock's door section has a quiet "how the door sees it" toggle that swaps your lines for that list, and "← your view" switches back. It shows only when the door knows somebody. It's not gold and not on the pin, so the pin still says one line.
+- **Refused:** visit counts or ranks in the door's list, a "top regulars" leaderboard, a separate merchant app or login, and a card on the map that repeats the pin.
+- **Verified:** tsc clean. /workspace/vestra-shots/v10-doorview.png shows the door's view before arriving, with Ari expected. v10-arrive.png shows it after arriving: Gabe here now, Noa came Oct 19, Ari came Oct 21.
+- **Next hour:** let the door's view hold one thing the door noticed about each person (what they left, e.g. "left a 🌿"), so a merchant recognizes a regular by more than a date.

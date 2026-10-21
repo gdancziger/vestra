@@ -54,3 +54,9 @@ html,body,#root,.app{margin:0;height:100%;background:var(--night);overflow:hidde
 .door-label small.expecting{color:#d9d2ff;font-style:italic;white-space:normal;max-width:200px}
 .door-label small.expecting::before{content:"\2022 ";color:#b4a8ff;animation:wait-pulse 2.4s ease-in-out infinite}
 .dock .line.expecting{color:#d9d2ff;font-style:italic}
+.door-view-t{display:block;font-size:10px;color:#9fb4ff;opacity:.85}
+.knows{margin-top:4px}
+.knows .person{font-size:10.5px;color:#c4d0f5;margin-top:2px;line-height:1.35}
+.knows .person b{color:#e8eeff;font-weight:600}
+.knows .person span{color:#9fb0dd}
+.knows .person.now span{color:#cfdcff;font-style:italic}

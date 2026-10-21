@@ -196,3 +196,19 @@ export function toldBy(doors: Record<string, DoorMemory>, names: Record<string, 
     .sort((a, b) => a[1].broughtAt![friend] - b[1].broughtAt![friend])[0]
   return e ? names[e[0]] ?? '' : ''
 }
+
+/** The door's own view: the people it knows, by name and day. No counts, no ranks. This is what a merchant would see. */
+export function doorKnows(m: DoorMemory | undefined, you: string, expecting = '', told = '') {
+  const out: { who: string; how: string; now?: boolean }[] = []
+  const n = you || 'you'
+  if (m && m.visits >= 1) {
+    const here = m.lastDay === today()
+    out.push({ who: n, how: `${m.visits >= 2 ? 'a regular since' : 'met'} ${day(m.firstAt)} · ${here ? 'here now' : `last came ${day(m.lastAt)}`}`, now: here })
+  }
+  for (const f of m?.heard ?? []) {
+    const t = m?.broughtAt?.[f]
+    out.push({ who: f, how: t ? `came with ${n} ${day(t)}` : `heard of from ${n}` })
+  }
+  if (expecting && !(m?.heard ?? []).includes(expecting)) out.push({ who: expecting, how: `expected. ${told || n} told us`, now: true })
+  return out
+}
