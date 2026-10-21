@@ -188,13 +188,16 @@ function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, same
   if (sameDay && prev) return `still here, ${n}`
   const v = next.visits
   if (v === 1) return `nice to meet you, ${n}. we'll remember`
-  if (v === 2) return `welcome back, ${n}. a light is on for you`
-  if (v === 3) return `welcome back, ${n}. there's a plant by the door now`
-  if (v === 4) return `welcome back, ${n}. you first came ${day(next.firstAt)}`
+  // Back in the part of the day the door already knows you by: it says so instead of a plain "welcome back".
+  const nowPart = partOf(new Date().getHours())
+  const hi = usualPart(prev?.hours) === nowPart[2] ? `${HELLO[nowPart[2]]}, ${n}. right on time.` : `welcome back, ${n}.`
+  if (v === 2) return `${hi} a light is on for you`
+  if (v === 3) return `${hi} there's a plant by the door now`
+  if (v === 4) return `${hi} you first came ${day(next.firstAt)}`
   const f = lastBrought(prev)
-  if (f) return `welcome back, ${n}. how is ${f}?`
+  if (f) return `${hi} how is ${f}?`
   const kept = next.left[next.left.length - 1]
-  return kept ? `welcome back, ${n}. your ${CATCH_GLYPH[kept]} is still here` : `welcome back, ${n}. your light is warmer`
+  return kept ? `${hi} your ${CATCH_GLYPH[kept]} is still here` : `${hi} your light is warmer`
 }
 
 /** The one thing a door will gain if you come back on another day. Honest: it is exactly what greet() will say. */
@@ -235,12 +238,17 @@ function lastBrought(m: DoorMemory | undefined) {
 
 const PART: [number, string, string][] = [[5, 'late one night', 'late at night'], [11, 'one morning', 'in the morning'], [14, 'one lunchtime', 'at lunchtime'], [17, 'one afternoon', 'in the afternoon'], [22, 'one evening', 'in the evening'], [24, 'late one night', 'late at night']]
 const partOf = (h: number) => PART.find(([end]) => h < end)!
+const HELLO: Record<string, string> = { 'in the morning': 'morning', 'at lunchtime': 'lunchtime', 'in the afternoon': 'afternoon', 'in the evening': 'evening', 'late at night': 'late again' }
+/** The part of the day two or more of your days here share, or ''. */
+function usualPart(hours: number[] | undefined) {
+  const parts = (hours ?? []).map((h) => partOf(h)[2])
+  return [...new Set(parts)].reverse().find((x) => parts.filter((y) => y === x).length >= 2) ?? ''
+}
 /** When you come, as the door noticed it: "who came by one evening", or once two days share it, "who usually comes in the evening". */
 export function comesWhen(m: DoorMemory | undefined) {
   if (!m || m.visits < 1) return ''
   const hs = m.hours?.length ? m.hours : [new Date(m.firstAt).getHours()]
-  const parts = hs.map((h) => partOf(h)[2])
-  const usual = [...new Set(parts)].reverse().find((x) => parts.filter((y) => y === x).length >= 2)
+  const usual = usualPart(hs)
   if (usual) return `who usually comes ${usual}`
   const [, once, usualWord] = partOf(hs[hs.length - 1])
   // Still the same day: "this evening", not "one evening".

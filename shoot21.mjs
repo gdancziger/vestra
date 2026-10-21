@@ -1,0 +1,18 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch()
+const ctx = await b.newContext({ viewport:{width:430,height:900}, geolocation:{latitude:40.6866,longitude:-73.9906}, permissions:['geolocation'] })
+const p = await ctx.newPage()
+await p.route('**/overpass-api.de/**', (r) => r.abort())
+const dock = async (t) => console.log(t, (await p.$eval('.door-part', e=>e.innerText)).replace(/\n/g,' | '))
+await p.goto('http://127.0.0.1:8080'); await p.waitForTimeout(4000)
+await p.fill('.dock input','Gabe'); await p.press('.dock input','Enter'); await p.waitForTimeout(300)
+await p.click('.main'); await p.waitForTimeout(400); await p.click('.main'); await p.waitForTimeout(500)
+await dock('day1 arrived:')
+const h = new Date().getHours()
+const day = (hours, visits, left) => p.evaluate(([hours, visits, left])=>{const s=JSON.parse(localStorage.vestra);for(const m of Object.values(s.state.doors)){m.lastDay='2000-01-01';m.lastAt-=86400000;m.firstAt-=3*86400000;m.visits=visits;m.hours=hours;if(left){m.left=['plant'];m.leftLog=[{k:'plant',at:m.lastAt}]}};s.state.targetId=null;localStorage.vestra=JSON.stringify(s)},[hours, visits, left])
+const arrive = async (t, shot) => { await p.reload(); await p.waitForTimeout(4000); await dock(t+' before:'); await p.click('.main'); await p.waitForTimeout(400); await p.click('.main'); await p.waitForTimeout(600); await dock(t+' arrived:'); if (shot) await p.screenshot({ path: shot }) }
+await day([h, h], 2); await arrive('visit3 usual part', '/workspace/vestra-shots/v21-ontime.png')
+await day([8, 9], 2); await arrive('visit3 other part')
+await day([h, h, h], 5, true); await arrive('visit6 usual part, plant', '/workspace/vestra-shots/v21-ontime-plant.png')
+await day([h], 0); await arrive('visit1 first')
+await b.close()
