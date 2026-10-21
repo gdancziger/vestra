@@ -1,0 +1,23 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch()
+const ctx = await b.newContext({ viewport:{width:430,height:900}, geolocation:{latitude:40.6866,longitude:-73.9906}, permissions:['geolocation'] })
+const p = await ctx.newPage()
+await p.goto('http://127.0.0.1:8080'); await p.waitForTimeout(6000)
+await p.fill('.dock input','Gabe'); await p.press('.dock input','Enter')
+for (const el of await p.$$('.catch')) { await el.click({force:true}).catch(()=>{}) }
+await p.click('.who .ghost'); await p.fill('.who input','Noa'); await p.press('.who input','Enter'); await p.waitForTimeout(300)
+await p.click('.main'); await p.waitForTimeout(300); await p.click('.main'); await p.waitForTimeout(300)
+await p.click('.icons .c >> nth=0').catch(()=>{}); await p.waitForTimeout(300)
+const id = await p.evaluate(()=>JSON.parse(localStorage.vestra).state.targetId)
+// next day: you come back, with Noa again
+await p.evaluate((id)=>{const s=JSON.parse(localStorage.vestra);const m=s.state.doors[id];const D=86400000;m.visits=4;m.firstAt-=D*12;m.lastAt-=D;m.lastDay='2000-01-01';for(const k in m.broughtAt)m.broughtAt[k]-=D;m.broughtDays={Noa:[new Date(Date.now()-D).toISOString().slice(0,10)]};m.leftLog.forEach(e=>e.at-=D);s.state.companion='Noa';localStorage.vestra=JSON.stringify(s)},id)
+await p.reload(); await p.waitForTimeout(5000)
+await p.screenshot({ path:'/workspace/vestra-shots/v12-expecting.png' })
+console.log('pin', await p.$$eval('.is-target .door-label', e=>e.map(x=>x.textContent)))
+await p.click('.main'); await p.waitForTimeout(400)
+await p.screenshot({ path:'/workspace/vestra-shots/v12-arrive.png' })
+console.log('says', await p.textContent('.door-part'))
+await p.click('.door-view-t'); await p.waitForTimeout(400)
+await p.screenshot({ path:'/workspace/vestra-shots/v12-doorview.png' })
+console.log('knows', await p.textContent('.knows'))
+await b.close()

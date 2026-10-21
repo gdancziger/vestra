@@ -76,3 +76,10 @@
 - **Refused:** a "catches left: 5" tally, a merchant "favorite customer" badge, and a gift list per person.
 - **Verified:** tsc clean. /workspace/vestra-shots/v11-doorview.png shows the same day, after leaving a 🌿 with Noa. v11-nextday.png shows the next day before arriving, with the door's view and what each person left.
 - **Next hour:** let what a person left come back to them at the next door they visit with that friend. Or, if that turns out to be too much, the door's view should note "usually comes with Noa" once a friend has come twice.
+
+## 2026-10-21 06:25 ET (entry 12): the door knows your friend when you bring them back
+- **Decision:** Entry 11 was verified (tsc clean, v11 shots, committed), so nothing needed finishing. The real gap was bringing the same person back: a door that had already met Noa said nothing when Noa returned. Being known has to work for the friend too, not just for you.
+- **Shipped:** `DoorMemory.broughtDays` keeps the days each person came with you (days, not a count). Before you arrive with a friend the door already knows, the pin reads "Noa again. last here Oct 20". On arrival it says "Noa, good to see you again. you too, Gabe". In "how the door sees it", Noa reads "came with Gabe Oct 20 and Oct 21", and once a friend has come on two different days, you get "usually comes with Noa" next to what you left.
+- **Refused:** a "visits together: 2" count, a "best friends" badge, and a reward for bringing the same person back.
+- **Verified:** tsc clean. /workspace/vestra-shots/v12-expecting.png (the next day, with Noa, before arriving), v12-arrive.png (greeting), and v12-doorview.png (usual company and both days).
+- **Next hour:** before you arrive, the dock shows two lines (expecting Noa, plus "it still asks after Noa"), and after arrival the promise still says "it'll ask after Noa" while Noa is standing there. Make the door's lines agree with each other when the friend is present.

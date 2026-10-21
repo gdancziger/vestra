@@ -17,6 +17,8 @@ export type DoorMemory = {
   broughtAt?: Record<string, number>
   /** What was left here, the day, and who you'd brought that day. What the door noticed, not a tally. */
   leftLog?: { k: CatchKind; at: number; with?: string }[]
+  /** The days each person came with you. Days, not a tally: the door says "Oct 19 and Oct 20", never "2". */
+  broughtDays?: Record<string, string[]>
 }
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -67,6 +69,9 @@ export const useVestra = create<State>()(
         const d = today()
         const heard = s.companion && !(m?.heard ?? []).includes(s.companion) ? [...(m?.heard ?? []), s.companion] : m?.heard ?? []
         const sameDay = m?.lastDay === d
+        const prevDays = s.companion ? m?.broughtDays?.[s.companion] ?? (m?.broughtAt?.[s.companion] ? [new Date(m.broughtAt[s.companion]).toISOString().slice(0, 10)] : []) : []
+        // A friend this door already met, back on a new day: the door recognizes them too.
+        const again = s.companion && (m?.heard ?? []).includes(s.companion) && prevDays.length && !prevDays.includes(d) ? s.companion : ''
         const next: DoorMemory = {
           visits: (m?.visits ?? 0) + (sameDay ? 0 : 1),
           firstAt: m?.firstAt ?? Date.now(),
@@ -76,12 +81,13 @@ export const useVestra = create<State>()(
           heard,
           broughtAt: s.companion ? { ...(m?.broughtAt ?? {}), [s.companion]: Date.now() } : m?.broughtAt,
           leftLog: m?.leftLog,
+          broughtDays: s.companion ? { ...(m?.broughtDays ?? {}), [s.companion]: [...prevDays.filter((x) => x !== d), d].slice(-6) } : m?.broughtDays,
         }
         set({
           doors: { ...s.doors, [door.id]: next },
           doorNames: { ...s.doorNames, [door.id]: door.name },
           hereId: door.id,
-          greeting: { doorId: door.id, text: greet(next, m, s.name, sameDay, heard !== (m?.heard ?? []) ? s.companion : '', toldBy(s.doors, s.doorNames, s.companion, door.id)) },
+          greeting: { doorId: door.id, text: greet(next, m, s.name, sameDay, heard !== (m?.heard ?? []) ? s.companion : '', toldBy(s.doors, s.doorNames, s.companion, door.id), again) },
           companion: s.companion && heard !== m?.heard ? '' : s.companion,
         })
       },
@@ -128,7 +134,8 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
     /** On a later day, what this door has been keeping ready for you. Exactly what greet() will say when you arrive. */
     waiting: m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m) : '',
     /** You're bringing someone here: the door has already heard of them before you arrive. */
-    expecting: bringing && !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${told || you || 'a friend'} told us` : '',
+    expecting: !bringing ? '' : !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${told || you || 'a friend'} told us`
+      : m?.broughtAt?.[bringing] && m.lastDay !== today() ? `${bringing} again. last here ${day(m.broughtAt[bringing])}` : '',
     /** The last person you brought here, and the day. Kept when you come back alone. */
     withYou: w,
     status: v === 0 ? 'stranger' : v === 1 ? 'known · 1 visit' : `regular · ${v} visits`,
@@ -136,12 +143,14 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
   }
 }
 
+const isoDay = (d: string) => day(new Date(d + 'T12:00').getTime())
 const day = (t: number) => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
 /** The door speaks on arrival: your name, and the one thing it gained because you came back. */
-function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, sameDay: boolean, friend: string, told = '') {
+function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, sameDay: boolean, friend: string, told = '', again = '') {
   const n = you || 'friend'
   if (friend) return `${friend}, ${told || n} told us about you. come in`
+  if (again) return `${again}, good to see you again. you too, ${n}`
   if (sameDay && prev) return `still here, ${n}`
   const v = next.visits
   if (v === 1) return `nice to meet you, ${n}. we'll remember`
@@ -211,13 +220,19 @@ export function doorKnows(m: DoorMemory | undefined, you: string, expecting = ''
     const here = m.lastDay === today()
     const mine = log[log.length - 1]
     const lastKind = m.left[m.left.length - 1]
-    const noticed = mine ? `left a ${CATCH_GLYPH[mine.k]} ${day(mine.at)}` : lastKind ? `left a ${CATCH_GLYPH[lastKind]}` : ''
+    const left = mine ? `left a ${CATCH_GLYPH[mine.k]} ${day(mine.at)}` : lastKind ? `left a ${CATCH_GLYPH[lastKind]}` : ''
+    // Once someone has come with you on two different days, the door knows them as your usual company.
+    const usual = Object.entries(m.broughtDays ?? {}).filter(([, ds]) => ds.length >= 2).sort((a, b) => b[1][b[1].length - 1].localeCompare(a[1][a[1].length - 1]))[0]?.[0]
+    const noticed = [left, usual ? `usually comes with ${usual}` : ''].filter(Boolean).join(' · ')
     out.push({ who: n, how: `${m.visits >= 2 ? 'a regular since' : 'met'} ${day(m.firstAt)} · ${here ? 'here now' : `last came ${day(m.lastAt)}`}`, noticed, now: here })
   }
   for (const f of m?.heard ?? []) {
     const t = m?.broughtAt?.[f]
     const theirs = [...log].reverse().find((e) => e.with === f)
-    out.push({ who: f, how: t ? `came with ${n} ${day(t)}` : `heard of from ${n}`, noticed: theirs ? `was here when the ${CATCH_GLYPH[theirs.k]} was left` : '' })
+    const ds = m?.broughtDays?.[f] ?? []
+    const when = ds.length >= 2 ? ds.slice(-2).map(isoDay).join(' and ') : t ? day(t) : ''
+    const coming = expecting === f && m?.lastDay !== today()
+    out.push({ who: f, how: coming ? `coming again with ${n} · last here ${when}` : t ? `came with ${n} ${when}` : `heard of from ${n}`, noticed: theirs ? `was here when the ${CATCH_GLYPH[theirs.k]} was left` : '', now: coming || undefined })
   }
   if (expecting && !(m?.heard ?? []).includes(expecting)) out.push({ who: expecting, how: `expected. ${told || n} told us`, now: true })
   return out
