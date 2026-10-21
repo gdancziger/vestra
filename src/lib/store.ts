@@ -19,6 +19,8 @@ export type DoorMemory = {
   leftLog?: { k: CatchKind; at: number; with?: string }[]
   /** The days each person came with you. Days, not a tally: the door says "Oct 19 and Oct 20", never "2". */
   broughtDays?: Record<string, string[]>
+  /** The hour of each day you came (one per day, last 6). The door notices when you come, not how often. */
+  hours?: number[]
 }
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -87,6 +89,7 @@ export const useVestra = create<State>()(
           broughtAt: s.companion ? { ...(m?.broughtAt ?? {}), [s.companion]: Date.now() } : m?.broughtAt,
           leftLog: m?.leftLog,
           broughtDays: s.companion ? { ...(m?.broughtDays ?? {}), [s.companion]: [...prevDays.filter((x) => x !== d), d].slice(-6) } : m?.broughtDays,
+          hours: sameDay && m?.hours?.length ? m.hours : [...(m?.hours ?? []), new Date().getHours()].slice(-6),
         }
         set({
           doors: { ...s.doors, [door.id]: next },
@@ -144,6 +147,7 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
     : usual && !said.includes(usual) ? { line: `${n}, who usually comes with ${usual}`, f: usual }
     : keptG && !said.includes(keptG) ? { line: `${n}, who left the ${keptG}${mine ? ' ' + when(mine.at) : ''}`, g: keptG }
     : lastF && w && !said.includes(lastF) ? { line: `${n}, who came with ${lastF} ${w.endsWith('today') ? 'today' : w.split(' ').slice(-2).join(' ')}`, f: lastF }
+    : comesWhen(m) ? { line: `${n}, ${comesWhen(m)}` }
     : { line: `knows you by name, ${n}` }
   if (noticed) lines.push(noticed.line)
   // Who you came with, if the noticed line didn't already say it.
@@ -229,6 +233,21 @@ function lastBrought(m: DoorMemory | undefined) {
   return e ? e[0] : ''
 }
 
+const PART: [number, string, string][] = [[5, 'late one night', 'late at night'], [11, 'one morning', 'in the morning'], [14, 'one lunchtime', 'at lunchtime'], [17, 'one afternoon', 'in the afternoon'], [22, 'one evening', 'in the evening'], [24, 'late one night', 'late at night']]
+const partOf = (h: number) => PART.find(([end]) => h < end)!
+/** When you come, as the door noticed it: "who came by one evening", or once two days share it, "who usually comes in the evening". */
+export function comesWhen(m: DoorMemory | undefined) {
+  if (!m || m.visits < 1) return ''
+  const hs = m.hours?.length ? m.hours : [new Date(m.firstAt).getHours()]
+  const parts = hs.map((h) => partOf(h)[2])
+  const usual = [...new Set(parts)].reverse().find((x) => parts.filter((y) => y === x).length >= 2)
+  if (usual) return `who usually comes ${usual}`
+  const [, once, usualWord] = partOf(hs[hs.length - 1])
+  // Still the same day: "this evening", not "one evening".
+  if (m.lastDay === today()) return `who came by ${usualWord.startsWith('late') ? 'tonight' : 'this ' + usualWord.split(' ').pop()}`
+  return `who came by ${once}`
+}
+
 /** Once someone has come with you on two different days, the door knows them as your usual company. */
 function usualWith(m: DoorMemory | undefined) {
   return Object.entries(m?.broughtDays ?? {}).filter(([, ds]) => ds.length >= 2).sort((a, b) => b[1][b[1].length - 1].localeCompare(a[1][a[1].length - 1]))[0]?.[0] ?? ''
@@ -263,7 +282,7 @@ export function doorKnows(m: DoorMemory | undefined, you: string, expecting = ''
     const left = mine ? `left a ${CATCH_GLYPH[mine.k]} ${day(mine.at)}` : lastKind ? `left a ${CATCH_GLYPH[lastKind]}` : ''
     // Once someone has come with you on two different days, the door knows them as your usual company.
     const usual = usualWith(m)
-    const noticed = [left, usual ? `usually comes with ${usual}` : ''].filter(Boolean).join(' · ')
+    const noticed = [left, usual ? `usually comes with ${usual}` : ''].filter(Boolean).join(' · ') || comesWhen(m).replace(/^who /, '')
     out.push({ who: n, how: `${m.visits >= 2 ? 'a regular since' : 'met'} ${day(m.firstAt)} · ${here ? 'here now' : `last came ${day(m.lastAt)}`}`, noticed, now: here })
   }
   for (const f of m?.heard ?? []) {
