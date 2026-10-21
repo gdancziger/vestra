@@ -1,0 +1,74 @@
+import { useState } from 'react'
+import { CATCH_GLYPH, doorSelf, useVestra, type Door } from '../../lib/store'
+import { RING_M, distM } from '../../lib/world'
+
+type P = { lat: number; lng: number }
+
+export function Chrome({ pos, doors }: { pos: P; doors: Door[] }) {
+  const s = useVestra()
+  const [draft, setDraft] = useState('')
+  const [bringing, setBringing] = useState(false)
+  const target = doors.find((d) => d.id === s.targetId) ?? null
+  const near = [...doors].sort((a, b) => distM(pos, a) - distM(pos, b))
+  const here = s.hereId ? doors.find((d) => d.id === s.hereId) ?? null : null
+  const door = target ?? near[0] ?? null
+  const mem = door ? s.doors[door.id] : undefined
+  const self = doorSelf(mem, s.name)
+  const dist = door ? Math.round(distM(pos, door)) : 0
+  const inRing = dist <= RING_M
+  const isHere = !!door && here?.id === door.id
+
+  const main = () => {
+    if (!door) return
+    if (!target) return s.setTarget(door.id)
+    if (inRing && !isHere) s.arrive(door)
+  }
+  const label = !door ? 'Looking for doors…' : !target ? `Go to ${door.name}` : isHere ? `You're at ${door.name}` : inRing ? `Arrive at ${door.name}` : `Walk to ${door.name} · ${dist} m`
+
+  return (
+    <div className="dock">
+      <section className="who">
+        {s.name ? (
+          <>
+            <div className="k">you</div>
+            <div className="v">{s.name}</div>
+            {bringing ? (
+              <form onSubmit={(e) => { e.preventDefault(); s.bring(draft); setDraft(''); setBringing(false) }}>
+                <input autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="their name" />
+              </form>
+            ) : s.companion ? (
+              <div className="sub">with {s.companion}</div>
+            ) : (
+              <button className="ghost" onClick={() => setBringing(true)}>+ bring someone</button>
+            )}
+          </>
+        ) : (
+          <form onSubmit={(e) => { e.preventDefault(); if (draft.trim()) { s.setName(draft); setDraft('') } }}>
+            <div className="k">who are you?</div>
+            <input autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="your name" />
+          </form>
+        )}
+      </section>
+
+      <section className="door-part">
+        <div className="k">the door</div>
+        <div className="v">{door?.name ?? '—'}</div>
+        <div className={'sub ' + (self.regular ? 'reg' : '')}>{self.status}</div>
+        {self.lines.slice(0, 2).map((l) => <div key={l} className="line">{l}</div>)}
+      </section>
+
+      <section className="carry">
+        <div className="k">you carry</div>
+        <div className="icons">
+          {s.carry.length === 0 && <span className="sub">pick up what's on the street</span>}
+          {s.carry.map((k, i) => (
+            <button key={i} className={'c c-' + k} disabled={!isHere} title={isHere ? `Leave ${k} at ${door?.name}` : k} onClick={() => s.leave(i)}>{CATCH_GLYPH[k]}</button>
+          ))}
+        </div>
+        {isHere && s.carry.length > 0 && <div className="sub">tap one to leave it here</div>}
+      </section>
+
+      <button className="main" disabled={!door || isHere || (!!target && !inRing)} onClick={main}>{label}</button>
+    </div>
+  )
+}
