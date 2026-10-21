@@ -46,3 +46,8 @@ html,body,#root,.app{margin:0;height:100%;background:var(--night);overflow:hidde
 .door.is-target .door-label q.says{width:220px;margin:3px auto;max-width:none}.door.is-target .door-label{top:-150px}
 .door-label small.promise{color:#9fb6ff;font-style:italic;white-space:normal;max-width:200px}
 .dock .line.promise{color:#9fb6ff;font-style:italic}
+.door-label small.waiting{color:#cfdcff;font-style:italic;white-space:normal;max-width:200px}
+.door-label small.waiting::before{content:"\2022 ";color:#9fb6ff;animation:wait-pulse 2.4s ease-in-out infinite}
+.dock .line.waiting{color:#cfdcff;font-style:italic}
+.door.is-waiting .door-dot{box-shadow:0 0 0 3px rgba(159,182,255,.35),0 0 14px rgba(159,182,255,.6)}
+@keyframes wait-pulse{0%,100%{opacity:.35}50%{opacity:1}}

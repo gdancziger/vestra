@@ -115,6 +115,8 @@ export function doorSelf(m: DoorMemory | undefined, you: string) {
     fact: v >= 4 && m ? `since ${new Date(m.firstAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : '',
     /** What this door is saving for your next return, said only after you've been here today. */
     promise: m && m.lastDay === today() ? promiseFor(m) : '',
+    /** On a later day, what this door has been keeping ready for you. Exactly what greet() will say when you arrive. */
+    waiting: m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m) : '',
     status: v === 0 ? 'stranger' : v === 1 ? 'known · 1 visit' : `regular · ${v} visits`,
     lines,
   }
@@ -145,4 +147,14 @@ function promiseFor(m: DoorMemory) {
   if (!m.heard.length) return "bring someone next time, they'll already be expected"
   if (v < 6) return 'each return, your light here grows warmer'
   return ''
+}
+
+/** The next day, the door shows what it kept ready for you, so returning has a visible reason before you arrive. */
+function waitingFor(m: DoorMemory) {
+  const v = m.visits
+  if (v === 1) return 'a light is on for you here'
+  if (v === 2) return 'a plant is waiting by the door'
+  if (v === 3) return 'it remembers the day you first came'
+  const kept = m.left[m.left.length - 1]
+  return kept ? `your ${kept} is still here` : 'your light here kept warm'
 }

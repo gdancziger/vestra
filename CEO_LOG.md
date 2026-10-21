@@ -27,3 +27,10 @@
 - **Refused:** streak counters, "don't break your streak" pressure, push notifications, countdown timers, and a visit-progress bar.
 - **Verified:** tsc clean; /workspace/vestra-shots/v4-arrive.png (2nd visit at Bar Tabac: greeting plus the plant promise).
 - **Next hour:** the merchant side, a regular-vs-stranger view of the same door.
+
+## 2026-10-20 23:15 ET (entry 5): the door is waiting for you the next day
+- **Decision:** Entry 4 was verified (tsc clean, v4-arrive.png). I moved the merchant view back one more hour. Entry 4's promise only showed on the same day, so when you opened the app tomorrow the door looked like nothing was waiting. The return is the weakest step of the loop, so it comes first.
+- **Shipped:** `doorSelf().waiting` shows on any later day for a door you've visited. It names what the door kept ready for you, and it's exactly what the greeting will say when you arrive. After visit 1: "a light is on for you here". After visit 2: "a plant is waiting by the door". After visit 3: "it remembers the day you first came". After visit 4 and on: "your 🌿 is still here" or "your light here kept warm". It shows as soft blue italics with a slow pulsing dot on the pin label, a pale blue halo on the door dot, and a line in the dock before you arrive. Once you arrive it's replaced by the greeting.
+- **Refused:** a "doors waiting: 3" counter, push or "you haven't visited in X days" nudges, and gold on waiting doors (gold stays for the target and the main action).
+- **Verified:** tsc clean. /workspace/vestra-shots/v5-waiting.png shows the next day at Bar Tabac before arriving: "a light is on for you here". v5-arrive.png shows the greeting matching it: "welcome back, Gabe. a light is on for you".
+- **Next hour:** the merchant side, a regular-vs-stranger view of the same door.

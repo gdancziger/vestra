@@ -40,14 +40,14 @@ function EdgeName({ pos, door }: { pos: P; door: Door }) {
 
 function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typeof useVestra.getState>['doors'][string] | undefined, says = '') {
   const s = doorSelf(mem, name)
-  const cls = ['door', target ? 'is-target' : '', s.visits ? 'is-known' : '', s.regular ? 'is-regular' : ''].join(' ')
+  const cls = ['door', target ? 'is-target' : '', s.waiting ? 'is-waiting' : '', s.visits ? 'is-known' : '', s.regular ? 'is-regular' : ''].join(' ')
   const left = (mem?.left ?? []).slice(-3).map((k) => `<i>${CATCH_GLYPH[k]}</i>`).join('')
   const html = `
     ${target ? '<div class="beam"></div>' : ''}
     ${s.light ? `<div class="door-light" style="--w:${s.warmth.toFixed(2)}"></div>` : ''}
     <div class="door-dot"></div>
     ${s.plant ? '<div class="door-plant">🌿</div>' : ''}
-    ${(target || s.visits) ? `<div class="door-label"><b>${door.name}</b>${says ? `<q class="says">${says.replace(/</g, '&lt;')}</q>` : ''}${s.visits ? `<small>${s.status}</small>` : ''}${s.promise ? `<small class="promise">${s.promise}</small>` : ''}${s.fact ? `<small class="fact">${s.fact}</small>` : ''}${left ? `<span class="door-left">${left}</span>` : ''}${s.visits && mem?.heard.length ? `<small class="heard">heard of ${mem.heard.join(', ')}</small>` : ''}</div>` : ''}`
+    ${(target || s.visits) ? `<div class="door-label"><b>${door.name}</b>${says ? `<q class="says">${says.replace(/</g, '&lt;')}</q>` : ''}${s.visits ? `<small>${s.status}</small>` : ''}${s.promise ? `<small class="promise">${s.promise}</small>` : ''}${s.waiting && !says ? `<small class="waiting">${s.waiting}</small>` : ''}${s.fact ? `<small class="fact">${s.fact}</small>` : ''}${left ? `<span class="door-left">${left}</span>` : ''}${s.visits && mem?.heard.length ? `<small class="heard">heard of ${mem.heard.join(', ')}</small>` : ''}</div>` : ''}`
   return L.divIcon({ className: cls, html, iconSize: [14, 14], iconAnchor: [7, 7] })
 }
 
