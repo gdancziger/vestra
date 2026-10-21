@@ -42,6 +42,8 @@ type State = {
   pick: (id: string, k: CatchKind) => void
   arrive: (d: Door) => void
   leave: (i: number) => void
+  /** Doors you met before places were kept: write down where they stand the first time they're seen again. */
+  placeDoors: (ds: Door[]) => void
 }
 
 export const useVestra = create<State>()(
@@ -108,6 +110,13 @@ export const useVestra = create<State>()(
           doors: { ...s.doors, [s.hereId]: { ...m, left: [...m.left, k].slice(-6), leftLog: log } },
           greeting: { doorId: s.hereId, text: `your ${CATCH_GLYPH[k]} stays here, ${s.name || 'friend'}` },
         })
+      },
+      placeDoors: (ds) => {
+        const s = get()
+        const pl = s.doorPlaces ?? {}
+        const add = ds.filter((d) => s.doors[d.id] && !pl[d.id])
+        if (!add.length) return
+        set({ doorPlaces: { ...pl, ...Object.fromEntries(add.map((d) => [d.id, { lat: d.lat, lng: d.lng }])) } })
       },
     }),
     { name: 'vestra', partialize: (s) => ({ ...s, hereId: null, greeting: null }) },
@@ -265,13 +274,17 @@ export function keepKnownDoors(live: Door[], pos: { lat: number; lng: number }, 
   const known = [...new Set([...Object.keys(mem), ...extra])].filter((id) => names[id] || live.some((d) => d.id === id))
   const liveIds = new Set(live.map((d) => d.id))
   const used = new Set<string>()
-  const out = live.map((d) => {
-    if (mem[d.id]) return d
-    const id = known.find((k) => !liveIds.has(k) && !used.has(k) && names[k] && norm(names[k]) === norm(d.name) && (!places[k] || near(places[k], d) < 120))
-    if (!id) return d
+  // Match nearest live doors first: a door remembered by name only (no place yet) goes to the same-named door
+  // closest to you, not to whichever branch of a chain the list happened to put first.
+  const swap = new Map<string, string>()
+  for (const d of [...live].sort((a, b) => near(pos, a) - near(pos, b))) {
+    if (mem[d.id]) continue
+    const id = known.find((k) => !liveIds.has(k) && !used.has(k) && names[k] && norm(names[k]) === norm(d.name) && (places[k] ? near(places[k], d) < 120 : near(pos, d) < 450))
+    if (!id) continue
     used.add(id)
-    return { ...d, id }
-  })
+    swap.set(d.id, id)
+  }
+  const out = live.map((d) => (swap.has(d.id) ? { ...d, id: swap.get(d.id)! } : d))
   const have = new Set(out.map((d) => d.id))
   for (const id of known) {
     const pl = places[id]
