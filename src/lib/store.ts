@@ -132,7 +132,7 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
     /** What this door is saving for your next return, said only after you've been here today. */
     promise: m && m.lastDay === today() ? promiseFor(m) : '',
     /** On a later day, what this door has been keeping ready for you. Exactly what greet() will say when you arrive. */
-    waiting: m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m) : '',
+    waiting: m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m, bringing) : '',
     /** You're bringing someone here: the door has already heard of them before you arrive. */
     expecting: !bringing ? '' : !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${told || you || 'a friend'} told us`
       : m?.broughtAt?.[bringing] && m.lastDay !== today() ? `${bringing} again. last here ${day(m.broughtAt[bringing])}` : '',
@@ -171,18 +171,22 @@ function promiseFor(m: DoorMemory) {
   if (v === 3) return "next time, it'll tell you the day you first came"
   if (!m.heard.length) return "bring someone next time, they'll already be expected"
   const f = lastBrought(m)
+  // The friend is standing here today: don't promise to ask after them. Next time it knows you both, together or not.
+  if (f && m.broughtDays?.[f]?.includes(today())) return `next time, with ${f} or without, it'll know you both`
   if (f) return `next time, it'll ask after ${f}`
   if (v < 6) return 'each return, your light here grows warmer'
   return ''
 }
 
 /** The next day, the door shows what it kept ready for you, so returning has a visible reason before you arrive. */
-function waitingFor(m: DoorMemory) {
+function waitingFor(m: DoorMemory, bringing = '') {
   const v = m.visits
   if (v === 1) return 'a light is on for you here'
   if (v === 2) return 'a plant is waiting by the door'
   if (v === 3) return 'it remembers the day you first came'
   const f = lastBrought(m)
+  // You're bringing that very friend: the door doesn't ask after someone walking in with you ("Noa again" says it).
+  if (f && f === bringing) return ''
   if (f) return `it still asks after ${f}`
   const kept = m.left[m.left.length - 1]
   return kept ? `your ${kept} is still here` : 'your light here kept warm'
@@ -199,7 +203,8 @@ function lastBrought(m: DoorMemory | undefined) {
 function withYou(m: DoorMemory | undefined) {
   if (!m?.broughtAt) return ''
   const e = Object.entries(m.broughtAt).sort((a, b) => b[1] - a[1])[0]
-  return e ? `${e[0]} came with you ${day(e[1])}` : ''
+  if (!e) return ''
+  return new Date(e[1]).toISOString().slice(0, 10) === today() ? `${e[0]} came with you today` : `${e[0]} came with you ${day(e[1])}`
 }
 
 /** The first other door you brought this person to. That door "tells" the next one, so a friend carries across doors. */

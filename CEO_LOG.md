@@ -83,3 +83,10 @@
 - **Refused:** a "visits together: 2" count, a "best friends" badge, and a reward for bringing the same person back.
 - **Verified:** tsc clean. /workspace/vestra-shots/v12-expecting.png (the next day, with Noa, before arriving), v12-arrive.png (greeting), and v12-doorview.png (usual company and both days).
 - **Next hour:** before you arrive, the dock shows two lines (expecting Noa, plus "it still asks after Noa"), and after arrival the promise still says "it'll ask after Noa" while Noa is standing there. Make the door's lines agree with each other when the friend is present.
+
+## 2026-10-21 07:20 ET (entry 13): the door's lines agree when your friend is standing there
+- **Decision:** Entry 12 was verified (tsc clean, v12 shots, committed), so nothing needed finishing. I shipped the planned fix. A door that says "Noa again" and also "it still asks after Noa" while Noa is walking in with you sounds like it isn't paying attention. Being known means the door's lines agree with each other.
+- **Shipped:** `waitingFor(m, bringing)` drops "it still asks after Noa" when you're bringing Noa, because "Noa again. last here Oct 20" already says it. After you arrive with Noa, the promise no longer says "it'll ask after Noa". It now reads "next time, with Noa or without, it'll know you both", and that's honest either way: alone, the greeting asks how Noa is, and with Noa, it says good to see them again. `withYou` says "Noa came with you today" on the same day instead of a date.
+- **Refused:** a new "together" badge, and any extra line on the pin. The pin still says one thing.
+- **Verified:** tsc clean. /workspace/vestra-shots/v13-expecting.png shows the next day with Noa: the dock has one friend line, "Noa again. last here Oct 20". v13-arrive.png shows the greeting plus the new promise. v13-doorview.png shows the door's view.
+- **Next hour:** the dock lists what you left by its kind ("keeps your plant") while the pin shows the 🌿. Make the door's own lines use the glyph you actually left, so words and map match, then look at what a first-time visitor sees in the first ten seconds.
