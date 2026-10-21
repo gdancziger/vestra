@@ -48,3 +48,10 @@
 - **Refused:** a "friends brought: 2" counter, a friend leaderboard, rewards for each person brought, and nudging you to message Noa.
 - **Verified:** tsc clean. /workspace/vestra-shots/v7-waiting.png shows the next day at Bar Tabac before arriving. v7-arrive.png shows the greeting asking after Noa.
 - **Next hour:** carry the friend across doors. When you bring Noa to a second door, it should already know which door Noa first came to with you ("Noa, Bar Tabac told us about you").
+
+## 2026-10-21 02:20 ET (entry 8): the friend you bring carries from door to door
+- **Decision:** Entry 7 was verified (tsc clean, v7 shots, committed), so nothing needed finishing. I shipped the planned move: a friend you brought to one door should arrive at the next door already introduced by the first.
+- **Shipped:** `toldBy()` finds the first other door you brought that person to. While you're with Noa and target a new door, it reads "expecting Noa. Bar Tabac told us" on the pin and in the dock. On arrival the greeting is "Noa, Bar Tabac told us about you. come in". When there's no earlier door, it still falls back to "Gabe told us". Doors now vouch for each other instead of only you vouching.
+- **Refused:** a "Noa has visited 2 doors" counter, a friend trail line drawn across the map, and any reward for chaining doors.
+- **Verified:** tsc clean. /workspace/vestra-shots/v8-expecting.png shows Bien Cuit expecting Noa, told by Bar Tabac. v8-arrive.png shows the greeting.
+- **Next hour:** the map label stacks are getting crowded (Bien Cuit's arrival label runs to five lines). Trim each pin to the one line that matters right now, and leave the rest to the dock.

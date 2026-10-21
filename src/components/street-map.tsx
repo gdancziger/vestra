@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
 import { Circle, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
-import { CATCH_GLYPH, doorSelf, useVestra, type Door } from '../lib/store'
+import { CATCH_GLYPH, doorSelf, toldBy, useVestra, type Door } from '../lib/store'
 import { RING_M, catchesFor } from '../lib/world'
 
 type P = { lat: number; lng: number }
@@ -38,8 +38,8 @@ function EdgeName({ pos, door }: { pos: P; door: Door }) {
   )
 }
 
-function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typeof useVestra.getState>['doors'][string] | undefined, says = '', bringing = '') {
-  const s = doorSelf(mem, name, target && !says ? bringing : '')
+function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typeof useVestra.getState>['doors'][string] | undefined, says = '', bringing = '', told = '') {
+  const s = doorSelf(mem, name, target && !says ? bringing : '', told)
   const cls = ['door', target ? 'is-target' : '', s.waiting ? 'is-waiting' : '', s.visits ? 'is-known' : '', s.regular ? 'is-regular' : ''].join(' ')
   const left = (mem?.left ?? []).slice(-3).map((k) => `<i>${CATCH_GLYPH[k]}</i>`).join('')
   const html = `
@@ -52,7 +52,7 @@ function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typ
 }
 
 export function StreetMap({ pos, doors }: { pos: P; doors: Door[] }) {
-  const { targetId, setTarget, doors: mem, name, picked, pick, greeting, companion } = useVestra()
+  const { targetId, setTarget, doors: mem, doorNames, name, picked, pick, greeting, companion } = useVestra()
   const day = new Date().toISOString().slice(0, 10)
   const catches = useMemo(() => catchesFor(pos, day), [pos, day])
   const taken = picked[day] ?? []
@@ -65,7 +65,7 @@ export function StreetMap({ pos, doors }: { pos: P; doors: Door[] }) {
       <Follow pos={pos} />
       <Circle center={[pos.lat, pos.lng]} radius={RING_M} pathOptions={{ color: '#7fa6ff', weight: 1.5, opacity: 0.55, fillColor: '#3a5cff', fillOpacity: 0.06, dashArray: '2 6' }} interactive={false} />
       {doors.map((d) => (
-        <Marker key={d.id} position={[d.lat, d.lng]} icon={doorIcon(d, d.id === targetId, name, mem[d.id], greeting?.doorId === d.id ? greeting.text : '', companion)} zIndexOffset={d.id === targetId ? 1000 : mem[d.id] ? 500 : 0} eventHandlers={{ click: () => setTarget(d.id) }} />
+        <Marker key={d.id} position={[d.lat, d.lng]} icon={doorIcon(d, d.id === targetId, name, mem[d.id], greeting?.doorId === d.id ? greeting.text : '', companion, d.id === targetId ? toldBy(mem, doorNames, companion, d.id) : '')} zIndexOffset={d.id === targetId ? 1000 : mem[d.id] ? 500 : 0} eventHandlers={{ click: () => setTarget(d.id) }} />
       ))}
       {catches.filter((c) => !taken.includes(c.id)).map((c) => (
         <Marker key={c.id} position={[c.lat, c.lng]} icon={L.divIcon({ className: `catch catch-${c.kind}`, html: `<span>${CATCH_GLYPH[c.kind]}</span>`, iconSize: [26, 26], iconAnchor: [13, 13] })} eventHandlers={{ click: () => pick(c.id, c.kind) }} />

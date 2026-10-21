@@ -78,7 +78,7 @@ export const useVestra = create<State>()(
           doors: { ...s.doors, [door.id]: next },
           doorNames: { ...s.doorNames, [door.id]: door.name },
           hereId: door.id,
-          greeting: { doorId: door.id, text: greet(next, m, s.name, sameDay, heard !== (m?.heard ?? []) ? s.companion : '') },
+          greeting: { doorId: door.id, text: greet(next, m, s.name, sameDay, heard !== (m?.heard ?? []) ? s.companion : '', toldBy(s.doors, s.doorNames, s.companion, door.id)) },
           companion: s.companion && heard !== m?.heard ? '' : s.companion,
         })
       },
@@ -100,7 +100,7 @@ export const useVestra = create<State>()(
 )
 
 /** What a door has become, from its memory. Each return adds one thing. */
-export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '') {
+export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', told = '') {
   const v = m?.visits ?? 0
   const lines: string[] = []
   if (v >= 1) lines.push(`knows you, ${you || 'friend'}`)
@@ -123,7 +123,7 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '') 
     /** On a later day, what this door has been keeping ready for you. Exactly what greet() will say when you arrive. */
     waiting: m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m) : '',
     /** You're bringing someone here: the door has already heard of them before you arrive. */
-    expecting: bringing && !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${you || 'a friend'} told us` : '',
+    expecting: bringing && !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${told || you || 'a friend'} told us` : '',
     /** The last person you brought here, and the day. Kept when you come back alone. */
     withYou: w,
     status: v === 0 ? 'stranger' : v === 1 ? 'known · 1 visit' : `regular · ${v} visits`,
@@ -134,9 +134,9 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '') 
 const day = (t: number) => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
 /** The door speaks on arrival: your name, and the one thing it gained because you came back. */
-function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, sameDay: boolean, friend: string) {
+function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, sameDay: boolean, friend: string, told = '') {
   const n = you || 'friend'
-  if (friend) return `${friend}, ${n} told us about you. come in`
+  if (friend) return `${friend}, ${told || n} told us about you. come in`
   if (sameDay && prev) return `still here, ${n}`
   const v = next.visits
   if (v === 1) return `nice to meet you, ${n}. we'll remember`
@@ -186,4 +186,13 @@ function withYou(m: DoorMemory | undefined) {
   if (!m?.broughtAt) return ''
   const e = Object.entries(m.broughtAt).sort((a, b) => b[1] - a[1])[0]
   return e ? `${e[0]} came with you ${day(e[1])}` : ''
+}
+
+/** The first other door you brought this person to. That door "tells" the next one, so a friend carries across doors. */
+export function toldBy(doors: Record<string, DoorMemory>, names: Record<string, string>, friend: string, exceptId: string) {
+  if (!friend) return ''
+  const e = Object.entries(doors)
+    .filter(([id, m]) => id !== exceptId && m.broughtAt?.[friend])
+    .sort((a, b) => a[1].broughtAt![friend] - b[1].broughtAt![friend])[0]
+  return e ? names[e[0]] ?? '' : ''
 }

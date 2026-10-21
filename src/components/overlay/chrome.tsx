@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CATCH_GLYPH, doorSelf, useVestra, type Door } from '../../lib/store'
+import { CATCH_GLYPH, doorSelf, toldBy, useVestra, type Door } from '../../lib/store'
 import { RING_M, distM } from '../../lib/world'
 
 type P = { lat: number; lng: number }
@@ -14,7 +14,7 @@ export function Chrome({ pos, doors }: { pos: P; doors: Door[] }) {
   const door = target ?? near[0] ?? null
   const mem = door ? s.doors[door.id] : undefined
   const isHereFor = (d: Door | null) => !!d && s.hereId === d.id
-  const self = doorSelf(mem, s.name, target && !isHereFor(door) ? s.companion : '')
+  const self = doorSelf(mem, s.name, target && !isHereFor(door) ? s.companion : '', door ? toldBy(s.doors, s.doorNames, s.companion, door.id) : '')
   const dist = door ? Math.round(distM(pos, door)) : 0
   const inRing = dist <= RING_M
   const isHere = !!door && here?.id === door.id
