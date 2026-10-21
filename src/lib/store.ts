@@ -132,7 +132,7 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
   const waitingNow = m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m, bringing) : ''
   // Say what you left once: if the waiting line already names it, the dock doesn't repeat it.
   if (keptG && !waitingNow.includes(keptG)) lines.push(`keeps your ${keptG} by the door`)
-  if (v >= 4 && m) lines.push(`remembers you first came ${new Date(m.firstAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`)
+  // From visit 4 the status itself says "a regular since Oct 9", so the dock doesn't say the first day twice.
   const w = withYou(m)
   if (w) lines.push(w)
   else if (m && m.heard.length) lines.push(`already heard of ${m.heard.join(', ')}`)
@@ -154,13 +154,15 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
       : m?.broughtAt?.[bringing] && m.lastDay !== today() ? `${bringing} again. last here ${day(m.broughtAt[bringing])}` : '',
     /** The last person you brought here, and the day. Kept when you come back alone. */
     withYou: w,
-    status: v === 0 ? 'stranger' : v === 1 ? 'known · 1 visit' : `regular · ${v} visits`,
+    /** The door's own words for how it knows you. Days, never a count; the first day stays visit 4's gift. */
+    status: !m || v === 0 ? 'stranger' : v === 1 ? `met you ${when(m.firstAt)}` : v < 4 ? `a regular · ${m.lastDay === today() ? 'here today' : `last here ${day(m.lastAt)}`}` : `a regular since ${day(m.firstAt)}`,
     lines,
   }
 }
 
 const isoDay = (d: string) => day(new Date(d + 'T12:00').getTime())
 const day = (t: number) => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+const when = (t: number) => (new Date(t).toISOString().slice(0, 10) === today() ? 'today' : day(t))
 
 /** The door speaks on arrival: your name, and the one thing it gained because you came back. */
 function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, sameDay: boolean, friend: string, told = '', again = '') {
