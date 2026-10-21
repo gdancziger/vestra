@@ -47,7 +47,7 @@ function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typ
     ${s.light ? `<div class="door-light" style="--w:${s.warmth.toFixed(2)}"></div>` : ''}
     <div class="door-dot"></div>
     ${s.plant ? '<div class="door-plant">🌿</div>' : ''}
-    ${(target || s.visits) ? `<div class="door-label"><b>${door.name}</b>${says ? `<q class="says">${says.replace(/</g, '&lt;')}</q>` : ''}${s.visits ? `<small>${s.status}</small>` : ''}${s.promise ? `<small class="promise">${s.promise}</small>` : ''}${s.expecting ? `<small class="expecting">${s.expecting.replace(/</g, '&lt;')}</small>` : ''}${s.waiting && !says ? `<small class="waiting">${s.waiting}</small>` : ''}${s.fact ? `<small class="fact">${s.fact}</small>` : ''}${left ? `<span class="door-left">${left}</span>` : ''}${s.visits && mem?.heard.length ? `<small class="heard">heard of ${mem.heard.join(', ')}</small>` : ''}</div>` : ''}`
+    ${(target || s.visits) ? `<div class="door-label"><b>${door.name}</b>${says ? `<q class="says">${says.replace(/</g, '&lt;')}</q>` : ''}${s.visits ? `<small>${s.status}</small>` : ''}${s.promise ? `<small class="promise">${s.promise}</small>` : ''}${s.expecting ? `<small class="expecting">${s.expecting.replace(/</g, '&lt;')}</small>` : ''}${s.waiting && !says ? `<small class="waiting">${s.waiting}</small>` : ''}${s.fact ? `<small class="fact">${s.fact}</small>` : ''}${left ? `<span class="door-left">${left}</span>` : ''}${s.withYou ? `<small class="heard">${s.withYou.replace(/</g, '&lt;')}</small>` : s.visits && mem?.heard.length ? `<small class="heard">heard of ${mem.heard.join(', ')}</small>` : ''}</div>` : ''}`
   return L.divIcon({ className: cls, html, iconSize: [14, 14], iconAnchor: [7, 7] })
 }
 

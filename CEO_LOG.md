@@ -41,3 +41,10 @@
 - **Refused:** a referral counter, "invite 3 friends" goals, share links or contacts import, and any reward for bringing someone.
 - **Verified:** tsc clean. /workspace/vestra-shots/v6-expecting.png shows Bar Tabac, a stranger door, expecting Noa. v6-arrive.png shows the greeting plus the promise of a light tomorrow.
 - **Next hour:** a door Noa has heard of should keep showing them when you come back alone ("Noa came with you Oct 21"), and the friend's name should carry to the next door you bring them to.
+
+## 2026-10-21 01:15 ET (entry 7): the door remembers who you brought, and asks after them
+- **Decision:** Entry 6 was verified (tsc clean, v6 shots, committed), so nothing needed finishing. I shipped the planned follow-through for bringing someone. Before this, a friend you brought turned into a dead "heard of Noa" tag. Now when you come back alone, the door keeps them alive.
+- **Shipped:** `DoorMemory.broughtAt` stores the day you brought each person, so it records the date and no count. The pin now reads "Noa came with you Oct 20" in place of "heard of Noa". From visit 4 on, after you've brought someone, the waiting line the next day says "it still asks after Noa". On arrival the greeting is "welcome back, Gabe. how is Noa?", and after that the promise says "next time, it'll ask after Noa". The promise, waiting, and greeting lines all say the same thing. Visits 1 through 4 still keep their own gifts.
+- **Refused:** a "friends brought: 2" counter, a friend leaderboard, rewards for each person brought, and nudging you to message Noa.
+- **Verified:** tsc clean. /workspace/vestra-shots/v7-waiting.png shows the next day at Bar Tabac before arriving. v7-arrive.png shows the greeting asking after Noa.
+- **Next hour:** carry the friend across doors. When you bring Noa to a second door, it should already know which door Noa first came to with you ("Noa, Bar Tabac told us about you").

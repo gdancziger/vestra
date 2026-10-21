@@ -13,6 +13,8 @@ export type DoorMemory = {
   lastDay: string
   left: CatchKind[]
   heard: string[]
+  /** When you brought each person here. The door remembers the day, not a count. */
+  broughtAt?: Record<string, number>
 }
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -70,6 +72,7 @@ export const useVestra = create<State>()(
           lastDay: d,
           left: m?.left ?? [],
           heard,
+          broughtAt: s.companion ? { ...(m?.broughtAt ?? {}), [s.companion]: Date.now() } : m?.broughtAt,
         }
         set({
           doors: { ...s.doors, [door.id]: next },
@@ -103,7 +106,9 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '') 
   if (v >= 1) lines.push(`knows you, ${you || 'friend'}`)
   if (m && m.left.length) lines.push(`keeps your ${m.left[m.left.length - 1]}`)
   if (v >= 4 && m) lines.push(`remembers you first came ${new Date(m.firstAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`)
-  if (m && m.heard.length) lines.push(`already heard of ${m.heard.join(', ')}`)
+  const w = withYou(m)
+  if (w) lines.push(w)
+  else if (m && m.heard.length) lines.push(`already heard of ${m.heard.join(', ')}`)
   return {
     visits: v,
     regular: v >= 2,
@@ -119,6 +124,8 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '') 
     waiting: m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m) : '',
     /** You're bringing someone here: the door has already heard of them before you arrive. */
     expecting: bringing && !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${you || 'a friend'} told us` : '',
+    /** The last person you brought here, and the day. Kept when you come back alone. */
+    withYou: w,
     status: v === 0 ? 'stranger' : v === 1 ? 'known · 1 visit' : `regular · ${v} visits`,
     lines,
   }
@@ -136,6 +143,8 @@ function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, same
   if (v === 2) return `welcome back, ${n}. a light is on for you`
   if (v === 3) return `welcome back, ${n}. there's a plant by the door now`
   if (v === 4) return `welcome back, ${n}. you first came ${day(next.firstAt)}`
+  const f = lastBrought(prev)
+  if (f) return `welcome back, ${n}. how is ${f}?`
   const kept = next.left[next.left.length - 1]
   return kept ? `welcome back, ${n}. your ${kept} is still here` : `welcome back, ${n}. your light is warmer`
 }
@@ -147,6 +156,8 @@ function promiseFor(m: DoorMemory) {
   if (v === 2) return 'come back tomorrow, there will be a plant by the door'
   if (v === 3) return "next time, it'll tell you the day you first came"
   if (!m.heard.length) return "bring someone next time, they'll already be expected"
+  const f = lastBrought(m)
+  if (f) return `next time, it'll ask after ${f}`
   if (v < 6) return 'each return, your light here grows warmer'
   return ''
 }
@@ -157,6 +168,22 @@ function waitingFor(m: DoorMemory) {
   if (v === 1) return 'a light is on for you here'
   if (v === 2) return 'a plant is waiting by the door'
   if (v === 3) return 'it remembers the day you first came'
+  const f = lastBrought(m)
+  if (f) return `it still asks after ${f}`
   const kept = m.left[m.left.length - 1]
   return kept ? `your ${kept} is still here` : 'your light here kept warm'
+}
+
+/** The last person you brought to this door (only from your 4th visit on, so the early returns keep their own gifts). */
+function lastBrought(m: DoorMemory | undefined) {
+  if (!m?.broughtAt || m.visits < 4) return ''
+  const e = Object.entries(m.broughtAt).sort((a, b) => b[1] - a[1])[0]
+  return e ? e[0] : ''
+}
+
+/** "Noa came with you Oct 21": the door keeps who you brought, and when. */
+function withYou(m: DoorMemory | undefined) {
+  if (!m?.broughtAt) return ''
+  const e = Object.entries(m.broughtAt).sort((a, b) => b[1] - a[1])[0]
+  return e ? `${e[0]} came with you ${day(e[1])}` : ''
 }
