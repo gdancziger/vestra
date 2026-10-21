@@ -133,7 +133,7 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
   const lines: string[] = []
   const keptG = m && m.left.length ? CATCH_GLYPH[m.left[m.left.length - 1]] : ''
   const waitingNow = m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m, withNow) : ''
-  const expecting = !bringing ? '' : !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${told || you || 'a friend'} told us`
+  const expecting = !bringing ? '' : !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}${told && !m?.visits ? ` and you, ${you || 'friend'}` : ''}. ${told || you || 'a friend'} told us`
     : m?.broughtAt?.[bringing] && m.lastDay !== today() ? `${bringing} again. last here ${day(m.broughtAt[bringing])}` : ''
   const w = withYou(m)
   const n = you || 'friend'
@@ -174,7 +174,7 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
     /** The last person you brought here, and the day. Kept when you come back alone. */
     withYou: w,
     /** The door's own words for how it knows you. Days, never a count; the first day stays visit 4's gift. */
-    status: !m || v === 0 ? 'stranger' : v === 1 ? `met you ${when(m.firstAt)}` : v < 4 ? `a regular · ${m.lastDay === today() ? 'here today' : `last here ${day(m.lastAt)}`}` : `a regular since ${day(m.firstAt)}`,
+    status: (!m || v === 0) && told && bringing ? 'heard of you' : !m || v === 0 ? 'stranger' : v === 1 ? `met you ${when(m.firstAt)}` : v < 4 ? `a regular · ${m.lastDay === today() ? 'here today' : `last here ${day(m.lastAt)}`}` : `a regular since ${day(m.firstAt)}`,
     lines,
   }
 }
@@ -186,7 +186,8 @@ const when = (t: number) => (new Date(t).toISOString().slice(0, 10) === today() 
 /** The door speaks on arrival: your name, and the one thing it gained because you came back. */
 function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, sameDay: boolean, friend: string, told = '', again = '') {
   const n = you || 'friend'
-  if (friend) return `${friend}, ${told || n} told us about you. come in`
+  // A door told about your friend by another door was told about you too: at a door new to you both, it greets you both.
+  if (friend) return `${friend}, ${told || n} told us about you.${told && !prev?.visits ? ` you too, ${n}.` : ''} come in`
   if (again) return `${again}, good to see you again. you too, ${n}`
   if (sameDay && prev) return `still here, ${n}`
   const v = next.visits
@@ -304,6 +305,7 @@ export function doorKnows(m: DoorMemory | undefined, you: string, expecting = ''
     const coming = expecting === f && m?.lastDay !== today()
     out.push({ who: f, how: coming ? `coming again with ${n} · last here ${when}` : t ? `came with ${n} ${when}` : `heard of from ${n}`, noticed: theirs ? `was here when the ${CATCH_GLYPH[theirs.k]} was left` : '', now: coming || undefined })
   }
+  if (expecting && told && !m?.visits) out.push({ who: n, how: `expected with ${expecting}. ${told} told us`, now: true })
   if (expecting && !(m?.heard ?? []).includes(expecting)) out.push({ who: expecting, how: `expected. ${told || n} told us`, now: true })
   return out
 }
