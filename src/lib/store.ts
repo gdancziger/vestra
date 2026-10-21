@@ -30,6 +30,8 @@ type State = {
   picked: Record<string, string[]> // day -> catch ids picked
   doors: Record<string, DoorMemory>
   doorNames: Record<string, string>
+  /** Where each door you've met stands, so it stays the same door when the live map reloads. */
+  doorPlaces?: Record<string, { lat: number; lng: number }>
   targetId: string | null
   hereId: string | null
   /** What the door just said when you arrived: your name + the one thing it gained. */
@@ -51,6 +53,7 @@ export const useVestra = create<State>()(
       picked: {},
       doors: {},
       doorNames: {},
+      doorPlaces: {},
       targetId: null,
       hereId: null,
       greeting: null,
@@ -86,6 +89,7 @@ export const useVestra = create<State>()(
         set({
           doors: { ...s.doors, [door.id]: next },
           doorNames: { ...s.doorNames, [door.id]: door.name },
+          doorPlaces: { ...(s.doorPlaces ?? {}), [door.id]: { lat: door.lat, lng: door.lng } },
           hereId: door.id,
           greeting: { doorId: door.id, text: greet(next, m, s.name, sameDay, heard !== (m?.heard ?? []) ? s.companion : '', toldBy(s.doors, s.doorNames, s.companion, door.id), again) },
           companion: s.companion && heard !== m?.heard ? '' : s.companion,
@@ -244,4 +248,42 @@ export function doorKnows(m: DoorMemory | undefined, you: string, expecting = ''
   }
   if (expecting && !(m?.heard ?? []).includes(expecting)) out.push({ who: expecting, how: `expected. ${told || n} told us`, now: true })
   return out
+}
+
+const norm = (t: string) => t.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g, '')
+const near = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+  const dy = (a.lat - b.lat) * 111320, dx = (a.lng - b.lng) * 111320 * Math.cos((a.lat * Math.PI) / 180)
+  return Math.hypot(dx, dy)
+}
+
+/**
+ * A door you've met stays that door. When the live street list loads, its ids differ from the ones the door
+ * was remembered under; match by name and place so a known door never turns back into a stranger, and keep a
+ * remembered door on the map even if the live list leaves it out.
+ */
+export function keepKnownDoors(live: Door[], pos: { lat: number; lng: number }, mem: Record<string, DoorMemory>, names: Record<string, string>, places: Record<string, { lat: number; lng: number }> = {}, extra: string[] = []): Door[] {
+  const known = [...new Set([...Object.keys(mem), ...extra])].filter((id) => names[id] || live.some((d) => d.id === id))
+  const liveIds = new Set(live.map((d) => d.id))
+  const used = new Set<string>()
+  const out = live.map((d) => {
+    if (mem[d.id]) return d
+    const id = known.find((k) => !liveIds.has(k) && !used.has(k) && names[k] && norm(names[k]) === norm(d.name) && (!places[k] || near(places[k], d) < 120))
+    if (!id) return d
+    used.add(id)
+    return { ...d, id }
+  })
+  const have = new Set(out.map((d) => d.id))
+  for (const id of known) {
+    const pl = places[id]
+    if (have.has(id) || !pl || !names[id] || near(pl, pos) > 450) continue
+    out.push({ id, name: names[id], kind: 'door', lat: pl.lat, lng: pl.lng })
+  }
+  return out
+}
+
+/** Before you choose: the door that's waiting for you, if one is within reach, else simply the nearest door. */
+export function firstDoor(doors: Door[], pos: { lat: number; lng: number }, mem: Record<string, DoorMemory>, reach: number): Door | null {
+  const byDist = [...doors].sort((a, b) => near(pos, a) - near(pos, b))
+  const d = today()
+  return byDist.find((x) => mem[x.id] && mem[x.id].visits >= 1 && mem[x.id].lastDay !== d && near(pos, x) <= reach) ?? byDist[0] ?? null
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
 import { Circle, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
-import { CATCH_GLYPH, doorSelf, toldBy, useVestra, type Door } from '../lib/store'
+import { CATCH_GLYPH, doorSelf, firstDoor, toldBy, useVestra, type Door } from '../lib/store'
 import { RING_M, catchesFor, distM } from '../lib/world'
 
 type P = { lat: number; lng: number }
@@ -69,7 +69,7 @@ export function StreetMap({ pos, doors }: { pos: P; doors: Door[] }) {
   const taken = picked[day] ?? []
   const target = doors.find((d) => d.id === targetId)
   // Before you pick a door, the nearest one quietly names itself so a first sight is a real place.
-  const nearest = target ? null : [...doors].sort((a, b) => distM(pos, a) - distM(pos, b))[0] ?? null
+  const nearest = target ? null : firstDoor(doors, pos, mem, RING_M)
   const nearLine = nearest ? (mem[nearest.id] ? '' : `a door ${Math.round(distM(pos, nearest))} m from you`) : ''
   const player = useMemo(() => L.divIcon({ className: 'player', html: '<div class="player-dot"></div>', iconSize: [20, 20], iconAnchor: [10, 10] }), [])
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CATCH_GLYPH, doorKnows, doorSelf, toldBy, useVestra, type Door } from '../../lib/store'
+import { CATCH_GLYPH, doorKnows, doorSelf, firstDoor, toldBy, useVestra, type Door } from '../../lib/store'
 import { RING_M, distM } from '../../lib/world'
 
 type P = { lat: number; lng: number }
@@ -12,7 +12,8 @@ export function Chrome({ pos, doors }: { pos: P; doors: Door[] }) {
   const target = doors.find((d) => d.id === s.targetId) ?? null
   const near = [...doors].sort((a, b) => distM(pos, a) - distM(pos, b))
   const here = s.hereId ? doors.find((d) => d.id === s.hereId) ?? null : null
-  const door = target ?? near[0] ?? null
+  // On a return day, the door that kept something for you comes first, not whichever stranger is closest.
+  const door = target ?? firstDoor(doors, pos, s.doors, RING_M) ?? near[0] ?? null
   const mem = door ? s.doors[door.id] : undefined
   const isHereFor = (d: Door | null) => !!d && s.hereId === d.id
   const self = doorSelf(mem, s.name, target && !isHereFor(door) ? s.companion : '', door ? toldBy(s.doors, s.doorNames, s.companion, door.id) : '')
