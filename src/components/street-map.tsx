@@ -38,8 +38,8 @@ function EdgeName({ pos, door }: { pos: P; door: Door }) {
   )
 }
 
-function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typeof useVestra.getState>['doors'][string] | undefined, says = '', bringing = '', told = '', nearest = '') {
-  const s = doorSelf(mem, name, target && !says ? bringing : '', told)
+function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typeof useVestra.getState>['doors'][string] | undefined, says = '', bringing = '', told = '', nearest = '', withNow = '') {
+  const s = doorSelf(mem, name, target && !says ? bringing : '', told, withNow || bringing)
   const cls = ['door', target ? 'is-target' : '', s.waiting ? 'is-waiting' : '', s.visits ? 'is-known' : '', s.regular ? 'is-regular' : '', nearest ? 'is-nearest' : ''].join(' ')
   const left = (mem?.left ?? []).slice(-3).map((k) => `<i>${CATCH_GLYPH[k]}</i>`).join('')
   const esc = (t: string) => t.replace(/</g, '&lt;')
@@ -71,6 +71,8 @@ export function StreetMap({ pos, doors }: { pos: P; doors: Door[] }) {
   // Before you pick a door, the nearest one quietly names itself so a first sight is a real place.
   const nearest = target ? null : firstDoor(doors, pos, mem, RING_M)
   const nearLine = nearest ? (mem[nearest.id] ? '' : `a door ${Math.round(distM(pos, nearest))} m from you`) : ''
+  // Who is with you today: the person you're bringing, or the one you already walked into a door with today.
+  const withNow = companion || Object.values(mem).flatMap((m) => Object.entries(m.broughtAt ?? {})).filter(([, t]) => new Date(t).toISOString().slice(0, 10) === day).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
   const player = useMemo(() => L.divIcon({ className: 'player', html: '<div class="player-dot"></div>', iconSize: [20, 20], iconAnchor: [10, 10] }), [])
 
   return (
@@ -79,7 +81,7 @@ export function StreetMap({ pos, doors }: { pos: P; doors: Door[] }) {
       <Follow pos={pos} />
       <Circle center={[pos.lat, pos.lng]} radius={RING_M} pathOptions={{ color: '#7fa6ff', weight: 1.5, opacity: 0.55, fillColor: '#3a5cff', fillOpacity: 0.06, dashArray: '2 6' }} interactive={false} />
       {doors.map((d) => (
-        <Marker key={d.id} position={[d.lat, d.lng]} icon={doorIcon(d, d.id === targetId, name, mem[d.id], greeting?.doorId === d.id ? greeting.text : '', companion, d.id === targetId ? toldBy(mem, doorNames, companion, d.id) : '', nearest?.id === d.id ? nearLine || ' ' : '')} zIndexOffset={d.id === targetId ? 1000 : nearest?.id === d.id ? 800 : mem[d.id] ? 500 : 0} eventHandlers={{ click: () => setTarget(d.id) }} />
+        <Marker key={d.id} position={[d.lat, d.lng]} icon={doorIcon(d, d.id === targetId, name, mem[d.id], greeting?.doorId === d.id ? greeting.text : '', companion, d.id === targetId ? toldBy(mem, doorNames, companion, d.id) : '', nearest?.id === d.id ? nearLine || ' ' : '', withNow)} zIndexOffset={d.id === targetId ? 1000 : nearest?.id === d.id ? 800 : mem[d.id] ? 500 : 0} eventHandlers={{ click: () => setTarget(d.id) }} />
       ))}
       {catches.filter((c) => !taken.includes(c.id)).map((c) => (
         <Marker key={c.id} position={[c.lat, c.lng]} icon={L.divIcon({ className: `catch catch-${c.kind}`, html: `<span>${CATCH_GLYPH[c.kind]}</span>`, iconSize: [26, 26], iconAnchor: [13, 13] })} eventHandlers={{ click: () => pick(c.id, c.kind) }} />

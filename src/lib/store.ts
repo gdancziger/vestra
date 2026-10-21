@@ -127,11 +127,12 @@ export const useVestra = create<State>()(
 )
 
 /** What a door has become, from its memory. Each return adds one thing. */
-export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', told = '') {
+/** `withNow`: who is walking with you right now. No door asks after someone standing beside you, even a door you aren't headed to. */
+export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', told = '', withNow = bringing) {
   const v = m?.visits ?? 0
   const lines: string[] = []
   const keptG = m && m.left.length ? CATCH_GLYPH[m.left[m.left.length - 1]] : ''
-  const waitingNow = m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m, bringing) : ''
+  const waitingNow = m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m, withNow) : ''
   const expecting = !bringing ? '' : !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${told || you || 'a friend'} told us`
     : m?.broughtAt?.[bringing] && m.lastDay !== today() ? `${bringing} again. last here ${day(m.broughtAt[bringing])}` : ''
   const w = withYou(m)
