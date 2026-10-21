@@ -37,3 +37,10 @@ html,body,#root,.app{margin:0;height:100%;background:var(--night);overflow:hidde
 .icons .c:disabled{opacity:.75;cursor:default}
 .main{grid-column:1/-1;margin-top:2px;padding:12px;border:none;border-radius:14px;background:var(--gold);color:#1c1405;font-weight:700;font-size:15px;cursor:pointer}
 .main:disabled{opacity:.6;cursor:default}
+
+.door-label q.says{display:block;quotes:"\201C" "\201D";color:#fff4dc;font-style:italic;font-size:12px;margin:2px 0;max-width:200px;white-space:normal;animation:says-in .6s ease-out}
+.door-label q.says::before{content:open-quote}.door-label q.says::after{content:close-quote}
+.door:not(.is-target) .door-label q.says{white-space:nowrap}
+.dock .line.says{color:#fff4dc;font-style:italic}
+@keyframes says-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.door.is-target .door-label q.says{width:220px;margin:3px auto;max-width:none}.door.is-target .door-label{top:-150px}

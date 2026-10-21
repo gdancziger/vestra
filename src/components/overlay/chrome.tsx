@@ -54,7 +54,8 @@ export function Chrome({ pos, doors }: { pos: P; doors: Door[] }) {
         <div className="k">the door</div>
         <div className="v">{door?.name ?? '—'}</div>
         <div className={'sub ' + (self.regular ? 'reg' : '')}>{self.status}</div>
-        {self.lines.slice(0, 2).map((l) => <div key={l} className="line">{l}</div>)}
+        {isHere && s.greeting?.doorId === door?.id && <div className="line says">“{s.greeting.text}”</div>}
+        {self.lines.slice(0, isHere && s.greeting ? 1 : 2).map((l) => <div key={l} className="line">{l}</div>)}
       </section>
 
       <section className="carry">

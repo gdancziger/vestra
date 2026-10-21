@@ -26,6 +26,8 @@ type State = {
   doorNames: Record<string, string>
   targetId: string | null
   hereId: string | null
+  /** What the door just said when you arrived: your name + the one thing it gained. */
+  greeting: { doorId: string; text: string } | null
   setName: (n: string) => void
   bring: (n: string) => void
   setTarget: (id: string | null) => void
@@ -45,6 +47,7 @@ export const useVestra = create<State>()(
       doorNames: {},
       targetId: null,
       hereId: null,
+      greeting: null,
       setName: (name) => set({ name: name.trim() }),
       bring: (companion) => set({ companion: companion.trim() }),
       setTarget: (targetId) => set({ targetId }),
@@ -72,6 +75,7 @@ export const useVestra = create<State>()(
           doors: { ...s.doors, [door.id]: next },
           doorNames: { ...s.doorNames, [door.id]: door.name },
           hereId: door.id,
+          greeting: { doorId: door.id, text: greet(next, m, s.name, sameDay, heard !== (m?.heard ?? []) ? s.companion : '') },
           companion: s.companion && heard !== m?.heard ? '' : s.companion,
         })
       },
@@ -84,10 +88,11 @@ export const useVestra = create<State>()(
         set({
           carry: s.carry.filter((_, j) => j !== i),
           doors: { ...s.doors, [s.hereId]: { ...m, left: [...m.left, k].slice(-6) } },
+          greeting: { doorId: s.hereId, text: `your ${k} stays here, ${s.name || 'friend'}` },
         })
       },
     }),
-    { name: 'vestra', partialize: (s) => ({ ...s, hereId: null }) },
+    { name: 'vestra', partialize: (s) => ({ ...s, hereId: null, greeting: null }) },
   ),
 )
 
@@ -111,4 +116,20 @@ export function doorSelf(m: DoorMemory | undefined, you: string) {
     status: v === 0 ? 'stranger' : v === 1 ? 'known · 1 visit' : `regular · ${v} visits`,
     lines,
   }
+}
+
+const day = (t: number) => new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+
+/** The door speaks on arrival: your name, and the one thing it gained because you came back. */
+function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, sameDay: boolean, friend: string) {
+  const n = you || 'friend'
+  if (friend) return `${friend}, ${n} told us about you. come in`
+  if (sameDay && prev) return `still here, ${n}`
+  const v = next.visits
+  if (v === 1) return `nice to meet you, ${n}. we'll remember`
+  if (v === 2) return `welcome back, ${n}. a light is on for you`
+  if (v === 3) return `welcome back, ${n}. there's a plant by the door now`
+  if (v === 4) return `welcome back, ${n}. you first came ${day(next.firstAt)}`
+  const kept = next.left[next.left.length - 1]
+  return kept ? `welcome back, ${n}. your ${kept} is still here` : `welcome back, ${n}. your light is warmer`
 }

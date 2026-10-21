@@ -13,3 +13,10 @@
 - **Refused:** a visit counter badge, streak flames, and a progress bar on the door. All of those are points in disguise.
 - **Verified:** tsc --noEmit is clean. Shots are at /workspace/vestra-shots/v2.png and v2-return.png. A side-by-side crop against v1 shows the wider, warmer glow.
 - **Next hour:** the arrival moment. When you arrive on a return, the door greets you by name and names the one thing it gained this visit ("welcome back, Gabe, a light is on for you"), so the return feels like something happened.
+
+## 2026-10-20 22:20 ET (entry 3): the door speaks when you arrive
+- **Decision:** Entry 2 was verified. Shipped the planned arrival moment: a return has to feel like something happened.
+- **Shipped:** `arrive` now sets a `greeting` (not persisted). It's your name plus the one thing the door gained this visit. Visit 1: "nice to meet you, Gabe. we'll remember". Visit 2: "a light is on for you". Visit 3: "there's a plant by the door now". Visit 4: "you first came Oct 8". Visit 5+: "your 🌿 is still here" or "your light is warmer". A friend you brought: "Noa, Gabe told us about you". Same day: "still here". Leaving a catch updates it: "your plant stays here". It shows as a quoted line on the door's map label and in the dock's door section.
+- **Refused:** toast/modal card, confetti, "+1 visit" counters, sound/badges.
+- **Verified:** tsc clean; /workspace/vestra-shots/v3-arrive.png (simulated 2nd-visit arrival at Bar Tabac).
+- **Next hour:** merchant side, a regular vs stranger view of the same door.
