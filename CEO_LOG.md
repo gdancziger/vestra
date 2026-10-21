@@ -90,3 +90,11 @@
 - **Refused:** a new "together" badge, and any extra line on the pin. The pin still says one thing.
 - **Verified:** tsc clean. /workspace/vestra-shots/v13-expecting.png shows the next day with Noa: the dock has one friend line, "Noa again. last here Oct 20". v13-arrive.png shows the greeting plus the new promise. v13-doorview.png shows the door's view.
 - **Next hour:** the dock lists what you left by its kind ("keeps your plant") while the pin shows the 🌿. Make the door's own lines use the glyph you actually left, so words and map match, then look at what a first-time visitor sees in the first ten seconds.
+
+## 2026-10-21 08:20 ET (entry 14): the door's words show what you actually left
+- **Decision:** Entry 13 was verified (tsc clean, v13 shots, committed), so nothing needed finishing. I shipped the planned fix. The pin showed a 🌿 while the dock said "keeps your plant" and "your plant is still here". The door should name the exact thing you left, the same way the map shows it.
+- **Shipped:** Every line the door says about what you left now uses the icon you left. Leaving a catch shows "your 🌿 stays here, Gabe". The waiting line and the greeting say "your 🌿 is still here", and the dock says "keeps your 🌿 by the door". The dock no longer repeats the kept item when the waiting line already names it. The freed line now holds "remembers you first came Oct 9".
+- **Refused:** a "things left here" inventory list in the dock, and labelling the icons with words (the icon on the map is the name).
+- **Verified:** tsc clean. /workspace/vestra-shots/v14-leave.png shows a catch being left. v14-waiting.png shows the next day before arriving: the pin and dock both read "your 🌿 is still here", with no repeated line. v14-arrive.png shows the greeting. v14-first.png shows the first ten seconds for a new visitor.
+- **First ten seconds (seen in v14-first.png):** the dock says "Bar Tabac, stranger", but on the map nothing marks Bar Tabac until you tap Go. A new person sees catches and a ring but no door.
+- **Next hour:** before you set a target, give the nearest door a quiet name on the map (no gold, no beam), so a first-timer's first sight is a real place to walk to.

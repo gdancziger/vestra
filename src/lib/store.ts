@@ -102,7 +102,7 @@ export const useVestra = create<State>()(
         set({
           carry: s.carry.filter((_, j) => j !== i),
           doors: { ...s.doors, [s.hereId]: { ...m, left: [...m.left, k].slice(-6), leftLog: log } },
-          greeting: { doorId: s.hereId, text: `your ${k} stays here, ${s.name || 'friend'}` },
+          greeting: { doorId: s.hereId, text: `your ${CATCH_GLYPH[k]} stays here, ${s.name || 'friend'}` },
         })
       },
     }),
@@ -115,7 +115,10 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
   const v = m?.visits ?? 0
   const lines: string[] = []
   if (v >= 1) lines.push(`knows you, ${you || 'friend'}`)
-  if (m && m.left.length) lines.push(`keeps your ${m.left[m.left.length - 1]}`)
+  const keptG = m && m.left.length ? CATCH_GLYPH[m.left[m.left.length - 1]] : ''
+  const waitingNow = m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m, bringing) : ''
+  // Say what you left once: if the waiting line already names it, the dock doesn't repeat it.
+  if (keptG && !waitingNow.includes(keptG)) lines.push(`keeps your ${keptG} by the door`)
   if (v >= 4 && m) lines.push(`remembers you first came ${new Date(m.firstAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`)
   const w = withYou(m)
   if (w) lines.push(w)
@@ -132,7 +135,7 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
     /** What this door is saving for your next return, said only after you've been here today. */
     promise: m && m.lastDay === today() ? promiseFor(m) : '',
     /** On a later day, what this door has been keeping ready for you. Exactly what greet() will say when you arrive. */
-    waiting: m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m, bringing) : '',
+    waiting: waitingNow,
     /** You're bringing someone here: the door has already heard of them before you arrive. */
     expecting: !bringing ? '' : !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${told || you || 'a friend'} told us`
       : m?.broughtAt?.[bringing] && m.lastDay !== today() ? `${bringing} again. last here ${day(m.broughtAt[bringing])}` : '',
@@ -160,7 +163,7 @@ function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, same
   const f = lastBrought(prev)
   if (f) return `welcome back, ${n}. how is ${f}?`
   const kept = next.left[next.left.length - 1]
-  return kept ? `welcome back, ${n}. your ${kept} is still here` : `welcome back, ${n}. your light is warmer`
+  return kept ? `welcome back, ${n}. your ${CATCH_GLYPH[kept]} is still here` : `welcome back, ${n}. your light is warmer`
 }
 
 /** The one thing a door will gain if you come back on another day. Honest: it is exactly what greet() will say. */
@@ -189,7 +192,7 @@ function waitingFor(m: DoorMemory, bringing = '') {
   if (f && f === bringing) return ''
   if (f) return `it still asks after ${f}`
   const kept = m.left[m.left.length - 1]
-  return kept ? `your ${kept} is still here` : 'your light here kept warm'
+  return kept ? `your ${CATCH_GLYPH[kept]} is still here` : 'your light here kept warm'
 }
 
 /** The last person you brought to this door (only from your 4th visit on, so the early returns keep their own gifts). */
