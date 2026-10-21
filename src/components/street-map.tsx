@@ -42,12 +42,22 @@ function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typ
   const s = doorSelf(mem, name, target && !says ? bringing : '', told)
   const cls = ['door', target ? 'is-target' : '', s.waiting ? 'is-waiting' : '', s.visits ? 'is-known' : '', s.regular ? 'is-regular' : ''].join(' ')
   const left = (mem?.left ?? []).slice(-3).map((k) => `<i>${CATCH_GLYPH[k]}</i>`).join('')
+  const esc = (t: string) => t.replace(/</g, '&lt;')
+  // The pin says only the one line that matters right now; the dock keeps the rest.
+  const heard = s.withYou || (s.visits && mem?.heard.length ? `heard of ${mem.heard.join(', ')}` : '')
+  const now = says ? `<q class="says">${esc(says)}</q>`
+    : s.expecting ? `<small class="expecting">${esc(s.expecting)}</small>`
+    : s.waiting ? `<small class="waiting">${esc(s.waiting)}</small>`
+    : s.promise ? `<small class="promise">${esc(s.promise)}</small>`
+    : heard ? `<small class="heard">${esc(heard)}</small>`
+    : s.fact ? `<small class="fact">${s.fact}</small>`
+    : target && !s.visits ? `<small>${s.status}</small>` : ''
   const html = `
     ${target ? '<div class="beam"></div>' : ''}
     ${s.light ? `<div class="door-light" style="--w:${s.warmth.toFixed(2)}"></div>` : ''}
     <div class="door-dot"></div>
     ${s.plant ? '<div class="door-plant">🌿</div>' : ''}
-    ${(target || s.visits) ? `<div class="door-label"><b>${door.name}</b>${says ? `<q class="says">${says.replace(/</g, '&lt;')}</q>` : ''}${s.visits ? `<small>${s.status}</small>` : ''}${s.promise ? `<small class="promise">${s.promise}</small>` : ''}${s.expecting ? `<small class="expecting">${s.expecting.replace(/</g, '&lt;')}</small>` : ''}${s.waiting && !says ? `<small class="waiting">${s.waiting}</small>` : ''}${s.fact ? `<small class="fact">${s.fact}</small>` : ''}${left ? `<span class="door-left">${left}</span>` : ''}${s.withYou ? `<small class="heard">${s.withYou.replace(/</g, '&lt;')}</small>` : s.visits && mem?.heard.length ? `<small class="heard">heard of ${mem.heard.join(', ')}</small>` : ''}</div>` : ''}`
+    ${(target || s.visits) ? `<div class="door-label"><b>${door.name}</b>${now}${left ? `<span class="door-left">${left}</span>` : ''}</div>` : ''}`
   return L.divIcon({ className: cls, html, iconSize: [14, 14], iconAnchor: [7, 7] })
 }
 

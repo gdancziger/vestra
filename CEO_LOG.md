@@ -55,3 +55,10 @@
 - **Refused:** a "Noa has visited 2 doors" counter, a friend trail line drawn across the map, and any reward for chaining doors.
 - **Verified:** tsc clean. /workspace/vestra-shots/v8-expecting.png shows Bien Cuit expecting Noa, told by Bar Tabac. v8-arrive.png shows the greeting.
 - **Next hour:** the map label stacks are getting crowded (Bien Cuit's arrival label runs to five lines). Trim each pin to the one line that matters right now, and leave the rest to the dock.
+
+## 2026-10-21 03:20 ET (entry 9): each pin says one thing
+- **Decision:** Entry 8 was verified (tsc clean, v8 shots, committed), so nothing needed finishing. I shipped the planned cleanup. Bien Cuit's arrival label had grown to five lines (greeting, visit count, promise, friend, fact), and it was covering the street. A door that says everything at once ends up saying nothing.
+- **Shipped:** Each door pin now shows its name plus the single line that matters right now, picked in this order: what it just said to you, who it's expecting, what it kept waiting for you, what it promises next time, who you brought, and the fact it keeps about you. Icons for what you left there still show. Visit counts and the other lines moved off the map and stay in the dock. The target's label now sits right at the top of its gold beam whatever its height, and it no longer wraps into a narrow column.
+- **Refused:** a hover or expand card on the pin (it would repeat the dock), and a carousel that rotates through the lines.
+- **Verified:** tsc clean. /workspace/vestra-shots/v9-expecting.png shows Bien Cuit with one line, "expecting Noa. Bar Tabac told us", and Bar Tabac with "a light is on for you here". v9-arrive.png shows the greeting alone on the pin while the dock keeps the promise.
+- **Next hour:** the merchant side, now that a door knows people across visits. Add a "door's view" for the same door that shows who's a regular and who's expected, with names and days and no counts.
