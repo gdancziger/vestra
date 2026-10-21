@@ -44,3 +44,5 @@ html,body,#root,.app{margin:0;height:100%;background:var(--night);overflow:hidde
 .dock .line.says{color:#fff4dc;font-style:italic}
 @keyframes says-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .door.is-target .door-label q.says{width:220px;margin:3px auto;max-width:none}.door.is-target .door-label{top:-150px}
+.door-label small.promise{color:#9fb6ff;font-style:italic;white-space:normal;max-width:200px}
+.dock .line.promise{color:#9fb6ff;font-style:italic}

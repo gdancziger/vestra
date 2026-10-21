@@ -20,3 +20,10 @@
 - **Refused:** toast/modal card, confetti, "+1 visit" counters, sound/badges.
 - **Verified:** tsc clean; /workspace/vestra-shots/v3-arrive.png (simulated 2nd-visit arrival at Bar Tabac).
 - **Next hour:** merchant side, a regular vs stranger view of the same door.
+
+## 2026-10-20 22:25 ET (entry 4): the door tells you why to come back tomorrow
+- **Decision:** Entry 3 was verified. Before building the merchant view, the loop needed something more basic: nothing gave you a reason to return *tomorrow*. Now the door says what it is saving for your next visit.
+- **Shipped:** `doorSelf().promise` shows only after you've been at the door today. It names exactly what the next return will add, and it matches what the greeting will say then. Visit 1: "come back tomorrow, a light will be on for you". Visit 2: "…there will be a plant by the door". Visit 3: "next time, it'll tell you the day you first came". Visit 4+ with nobody brought yet: "bring someone next time, they'll already be expected". After that: "each return, your light here grows warmer". It appears in soft blue italics (not gold) on the door's map label and in the dock under the greeting.
+- **Refused:** streak counters, "don't break your streak" pressure, push notifications, countdown timers, and a visit-progress bar.
+- **Verified:** tsc clean; /workspace/vestra-shots/v4-arrive.png (2nd visit at Bar Tabac: greeting plus the plant promise).
+- **Next hour:** the merchant side, a regular-vs-stranger view of the same door.
