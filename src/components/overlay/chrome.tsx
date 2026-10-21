@@ -62,7 +62,7 @@ export function Chrome({ pos, doors }: { pos: P; doors: Door[] }) {
         {doorView && knows.length > 0 ? (
           <div className="knows">
             <div className="k">{door?.name} knows</div>
-            {knows.map((p) => <div key={p.who} className={'person' + (p.now ? ' now' : '')}><b>{p.who}</b> <span>{p.how}</span></div>)}
+            {knows.map((p) => <div key={p.who} className={'person' + (p.now ? ' now' : '')}><b>{p.who}</b> <span>{p.how}</span>{p.noticed && <div className="noticed">{p.noticed}</div>}</div>)}
           </div>
         ) : <>
         {isHere && s.greeting?.doorId === door?.id && <div className="line says">“{s.greeting.text}”</div>}

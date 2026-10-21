@@ -1,0 +1,22 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch()
+const ctx = await b.newContext({ viewport:{width:430,height:900}, geolocation:{latitude:40.6866,longitude:-73.9906}, permissions:['geolocation'] })
+const p = await ctx.newPage()
+await p.goto('http://127.0.0.1:8080'); await p.waitForTimeout(6000)
+await p.fill('.dock input','Gabe'); await p.press('.dock input','Enter')
+for (const el of await p.$$('.catch')) { await el.click({force:true}).catch(()=>{}) }
+await p.click('.who .ghost'); await p.fill('.who input','Noa'); await p.press('.who input','Enter'); await p.waitForTimeout(300)
+await p.click('.main'); await p.waitForTimeout(300); await p.click('.main'); await p.waitForTimeout(300)
+console.log('carry', await p.$$eval('.icons .c', e=>e.map(x=>x.textContent)))
+await p.click('.icons .c >> nth=0').catch(e=>console.log('noleave',e.message)); await p.waitForTimeout(300)
+await p.click('.door-view-t'); await p.waitForTimeout(400)
+await p.screenshot({ path:'/workspace/vestra-shots/v11-doorview.png' })
+console.log('today', await p.textContent('.knows'))
+const id = await p.evaluate(()=>JSON.parse(localStorage.vestra).state.targetId)
+// next-day: shift everything back a day, seed a few earlier visits
+await p.evaluate((id)=>{const s=JSON.parse(localStorage.vestra);const m=s.state.doors[id];const D=86400000;m.visits=4;m.firstAt-=D*12;m.lastAt-=D;m.lastDay='2000-01-01';for(const k in m.broughtAt)m.broughtAt[k]-=D;m.leftLog.forEach(e=>e.at-=D);localStorage.vestra=JSON.stringify(s)},id)
+await p.reload(); await p.waitForTimeout(5000)
+await p.click('.door-view-t'); await p.waitForTimeout(400)
+await p.screenshot({ path:'/workspace/vestra-shots/v11-nextday.png' })
+console.log('nextday', await p.textContent('.knows'))
+await b.close()

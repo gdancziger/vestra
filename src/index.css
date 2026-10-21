@@ -59,4 +59,5 @@ html,body,#root,.app{margin:0;height:100%;background:var(--night);overflow:hidde
 .knows .person{font-size:10.5px;color:#c4d0f5;margin-top:2px;line-height:1.35}
 .knows .person b{color:#e8eeff;font-weight:600}
 .knows .person span{color:#9fb0dd}
+.knows .person .noticed{color:#a9c4e8;font-size:10px;padding-left:8px;opacity:.9}
 .knows .person.now span{color:#cfdcff;font-style:italic}

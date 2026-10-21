@@ -69,3 +69,10 @@
 - **Refused:** visit counts or ranks in the door's list, a "top regulars" leaderboard, a separate merchant app or login, and a card on the map that repeats the pin.
 - **Verified:** tsc clean. /workspace/vestra-shots/v10-doorview.png shows the door's view before arriving, with Ari expected. v10-arrive.png shows it after arriving: Gabe here now, Noa came Oct 19, Ari came Oct 21.
 - **Next hour:** let the door's view hold one thing the door noticed about each person (what they left, e.g. "left a 🌿"), so a merchant recognizes a regular by more than a date.
+
+## 2026-10-21 05:20 ET (entry 11): the door remembers what each person left
+- **Decision:** Entry 10 was verified (tsc clean, v10 shots, committed), so nothing needed finishing. I shipped the planned move: a merchant should recognize a regular by what they left, not only by a date.
+- **Shipped:** `DoorMemory.leftLog` records each catch left at a door, the day, and the friend you'd brought that day. In "how the door sees it", each person now gets one noticed line: "Gabe ... left a 🌿 Oct 20", and "Noa came with Gabe Oct 20 ... was here when the 🌿 was left". Older memories without a log fall back to "left a 🌿". There are no counts, it's not gold, and the pin is unchanged.
+- **Refused:** a "catches left: 5" tally, a merchant "favorite customer" badge, and a gift list per person.
+- **Verified:** tsc clean. /workspace/vestra-shots/v11-doorview.png shows the same day, after leaving a 🌿 with Noa. v11-nextday.png shows the next day before arriving, with the door's view and what each person left.
+- **Next hour:** let what a person left come back to them at the next door they visit with that friend. Or, if that turns out to be too much, the door's view should note "usually comes with Noa" once a friend has come twice.

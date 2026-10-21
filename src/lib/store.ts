@@ -15,6 +15,8 @@ export type DoorMemory = {
   heard: string[]
   /** When you brought each person here. The door remembers the day, not a count. */
   broughtAt?: Record<string, number>
+  /** What was left here, the day, and who you'd brought that day. What the door noticed, not a tally. */
+  leftLog?: { k: CatchKind; at: number; with?: string }[]
 }
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -73,6 +75,7 @@ export const useVestra = create<State>()(
           left: m?.left ?? [],
           heard,
           broughtAt: s.companion ? { ...(m?.broughtAt ?? {}), [s.companion]: Date.now() } : m?.broughtAt,
+          leftLog: m?.leftLog,
         }
         set({
           doors: { ...s.doors, [door.id]: next },
@@ -88,9 +91,11 @@ export const useVestra = create<State>()(
         const k = s.carry[i]
         if (!k) return
         const m = s.doors[s.hereId]
+        const withF = Object.entries(m.broughtAt ?? {}).find(([, t]) => new Date(t).toISOString().slice(0, 10) === today())?.[0]
+        const log = [...(m.leftLog ?? []), { k, at: Date.now(), ...(withF ? { with: withF } : {}) }].slice(-6)
         set({
           carry: s.carry.filter((_, j) => j !== i),
-          doors: { ...s.doors, [s.hereId]: { ...m, left: [...m.left, k].slice(-6) } },
+          doors: { ...s.doors, [s.hereId]: { ...m, left: [...m.left, k].slice(-6), leftLog: log } },
           greeting: { doorId: s.hereId, text: `your ${k} stays here, ${s.name || 'friend'}` },
         })
       },
@@ -199,15 +204,20 @@ export function toldBy(doors: Record<string, DoorMemory>, names: Record<string, 
 
 /** The door's own view: the people it knows, by name and day. No counts, no ranks. This is what a merchant would see. */
 export function doorKnows(m: DoorMemory | undefined, you: string, expecting = '', told = '') {
-  const out: { who: string; how: string; now?: boolean }[] = []
+  const out: { who: string; how: string; noticed?: string; now?: boolean }[] = []
   const n = you || 'you'
+  const log = m?.leftLog ?? []
   if (m && m.visits >= 1) {
     const here = m.lastDay === today()
-    out.push({ who: n, how: `${m.visits >= 2 ? 'a regular since' : 'met'} ${day(m.firstAt)} · ${here ? 'here now' : `last came ${day(m.lastAt)}`}`, now: here })
+    const mine = log[log.length - 1]
+    const lastKind = m.left[m.left.length - 1]
+    const noticed = mine ? `left a ${CATCH_GLYPH[mine.k]} ${day(mine.at)}` : lastKind ? `left a ${CATCH_GLYPH[lastKind]}` : ''
+    out.push({ who: n, how: `${m.visits >= 2 ? 'a regular since' : 'met'} ${day(m.firstAt)} · ${here ? 'here now' : `last came ${day(m.lastAt)}`}`, noticed, now: here })
   }
   for (const f of m?.heard ?? []) {
     const t = m?.broughtAt?.[f]
-    out.push({ who: f, how: t ? `came with ${n} ${day(t)}` : `heard of from ${n}` })
+    const theirs = [...log].reverse().find((e) => e.with === f)
+    out.push({ who: f, how: t ? `came with ${n} ${day(t)}` : `heard of from ${n}`, noticed: theirs ? `was here when the ${CATCH_GLYPH[theirs.k]} was left` : '' })
   }
   if (expecting && !(m?.heard ?? []).includes(expecting)) out.push({ who: expecting, how: `expected. ${told || n} told us`, now: true })
   return out
