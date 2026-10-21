@@ -104,6 +104,10 @@ export function doorSelf(m: DoorMemory | undefined, you: string) {
     regular: v >= 2,
     light: v >= 2 || !!m?.left.includes('light'),
     plant: v >= 3 || !!m?.left.includes('plant'),
+    /** 0..1, how warm this door's light has grown from your returns. */
+    warmth: Math.min(1, v / 6),
+    /** The one fact the door keeps about you, once you are a regular of 4+ visits. */
+    fact: v >= 4 && m ? `since ${new Date(m.firstAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : '',
     status: v === 0 ? 'stranger' : v === 1 ? 'known · 1 visit' : `regular · ${v} visits`,
     lines,
   }

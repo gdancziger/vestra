@@ -44,10 +44,10 @@ function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typ
   const left = (mem?.left ?? []).slice(-3).map((k) => `<i>${CATCH_GLYPH[k]}</i>`).join('')
   const html = `
     ${target ? '<div class="beam"></div>' : ''}
-    ${s.light ? '<div class="door-light"></div>' : ''}
+    ${s.light ? `<div class="door-light" style="--w:${s.warmth.toFixed(2)}"></div>` : ''}
     <div class="door-dot"></div>
     ${s.plant ? '<div class="door-plant">🌿</div>' : ''}
-    ${(target || s.visits) ? `<div class="door-label"><b>${door.name}</b>${s.visits ? `<small>${s.status}</small>` : ''}${left ? `<span class="door-left">${left}</span>` : ''}${s.visits && mem?.heard.length ? `<small class="heard">heard of ${mem.heard.join(', ')}</small>` : ''}</div>` : ''}`
+    ${(target || s.visits) ? `<div class="door-label"><b>${door.name}</b>${s.visits ? `<small>${s.status}</small>` : ''}${s.fact ? `<small class="fact">${s.fact}</small>` : ''}${left ? `<span class="door-left">${left}</span>` : ''}${s.visits && mem?.heard.length ? `<small class="heard">heard of ${mem.heard.join(', ')}</small>` : ''}</div>` : ''}`
   return L.divIcon({ className: cls, html, iconSize: [14, 14], iconAnchor: [7, 7] })
 }
 

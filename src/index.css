@@ -10,7 +10,8 @@ html,body,#root,.app{margin:0;height:100%;background:var(--night);overflow:hidde
 .door.is-known .door-dot{background:#9fb4ff;border-color:#dfe7ff}
 .door.is-target .door-dot{background:var(--gold);border-color:#fff3cf;box-shadow:0 0 10px var(--gold)}
 .beam{position:absolute;left:50%;bottom:7px;width:6px;height:110px;transform:translateX(-50%);background:linear-gradient(to top,rgba(232,184,74,.95),rgba(232,184,74,0));filter:blur(1.5px);border-radius:3px;pointer-events:none}
-.door-light{position:absolute;left:50%;top:50%;width:46px;height:46px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,236,190,.55),rgba(160,190,255,0) 70%);pointer-events:none}
+.door-light{--w:.3;position:absolute;left:50%;top:50%;width:calc(34px + 70px * var(--w));height:calc(34px + 70px * var(--w));transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,236,196,calc(.3 + .45 * var(--w))),rgba(255,214,160,calc(.12 * var(--w))) 40%,rgba(160,190,255,0) 70%);pointer-events:none}
+.door-label small.fact{color:#e9dcc0}
 .door-plant{position:absolute;left:12px;top:-6px;font-size:12px}
 .door-label{position:absolute;left:18px;top:-4px;white-space:nowrap;font-size:11px;line-height:1.25;color:var(--ink);text-shadow:0 1px 3px #000}
 .door-label b{display:block;font-weight:600}
