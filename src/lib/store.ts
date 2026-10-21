@@ -127,15 +127,28 @@ export const useVestra = create<State>()(
 export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', told = '') {
   const v = m?.visits ?? 0
   const lines: string[] = []
-  if (v >= 1) lines.push(`knows you, ${you || 'friend'}`)
   const keptG = m && m.left.length ? CATCH_GLYPH[m.left[m.left.length - 1]] : ''
   const waitingNow = m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m, bringing) : ''
-  // Say what you left once: if the waiting line already names it, the dock doesn't repeat it.
-  if (keptG && !waitingNow.includes(keptG)) lines.push(`keeps your ${keptG} by the door`)
-  // From visit 4 the status itself says "a regular since Oct 9", so the dock doesn't say the first day twice.
+  const expecting = !bringing ? '' : !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${told || you || 'a friend'} told us`
+    : m?.broughtAt?.[bringing] && m.lastDay !== today() ? `${bringing} again. last here ${day(m.broughtAt[bringing])}` : ''
   const w = withYou(m)
-  if (w) lines.push(w)
-  else if (m && m.heard.length) lines.push(`already heard of ${m.heard.join(', ')}`)
+  const n = you || 'friend'
+  // The door's one noticed thing about you, with your name: not "knows you" (the status already says it met you).
+  // Say each thing once: skip whatever the waiting or expecting line already names.
+  const said = waitingNow + ' ' + expecting
+  const log = m?.leftLog ?? []
+  const mine = log[log.length - 1]
+  const usual = usualWith(m)
+  const lastF = m?.broughtAt ? Object.entries(m.broughtAt).sort((a, b) => b[1] - a[1])[0]?.[0] : ''
+  const noticed = !m || v < 1 ? null
+    : usual && !said.includes(usual) ? { line: `${n}, who usually comes with ${usual}`, f: usual }
+    : keptG && !said.includes(keptG) ? { line: `${n}, who left the ${keptG}${mine ? ' ' + when(mine.at) : ''}`, g: keptG }
+    : lastF && w && !said.includes(lastF) ? { line: `${n}, who came with ${lastF} ${w.endsWith('today') ? 'today' : w.split(' ').slice(-2).join(' ')}`, f: lastF }
+    : { line: `knows you by name, ${n}` }
+  if (noticed) lines.push(noticed.line)
+  // Who you came with, if the noticed line didn't already say it.
+  if (w && !(noticed && 'f' in noticed && noticed.f === lastF) && !said.includes(lastF ?? '')) lines.push(w)
+  else if (!w && m && m.heard.length) lines.push(`already heard of ${m.heard.join(', ')}`)
   return {
     visits: v,
     regular: v >= 2,
@@ -150,8 +163,7 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
     /** On a later day, what this door has been keeping ready for you. Exactly what greet() will say when you arrive. */
     waiting: waitingNow,
     /** You're bringing someone here: the door has already heard of them before you arrive. */
-    expecting: !bringing ? '' : !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${told || you || 'a friend'} told us`
-      : m?.broughtAt?.[bringing] && m.lastDay !== today() ? `${bringing} again. last here ${day(m.broughtAt[bringing])}` : '',
+    expecting,
     /** The last person you brought here, and the day. Kept when you come back alone. */
     withYou: w,
     /** The door's own words for how it knows you. Days, never a count; the first day stays visit 4's gift. */
@@ -217,6 +229,11 @@ function lastBrought(m: DoorMemory | undefined) {
   return e ? e[0] : ''
 }
 
+/** Once someone has come with you on two different days, the door knows them as your usual company. */
+function usualWith(m: DoorMemory | undefined) {
+  return Object.entries(m?.broughtDays ?? {}).filter(([, ds]) => ds.length >= 2).sort((a, b) => b[1][b[1].length - 1].localeCompare(a[1][a[1].length - 1]))[0]?.[0] ?? ''
+}
+
 /** "Noa came with you Oct 21": the door keeps who you brought, and when. */
 function withYou(m: DoorMemory | undefined) {
   if (!m?.broughtAt) return ''
@@ -245,7 +262,7 @@ export function doorKnows(m: DoorMemory | undefined, you: string, expecting = ''
     const lastKind = m.left[m.left.length - 1]
     const left = mine ? `left a ${CATCH_GLYPH[mine.k]} ${day(mine.at)}` : lastKind ? `left a ${CATCH_GLYPH[lastKind]}` : ''
     // Once someone has come with you on two different days, the door knows them as your usual company.
-    const usual = Object.entries(m.broughtDays ?? {}).filter(([, ds]) => ds.length >= 2).sort((a, b) => b[1][b[1].length - 1].localeCompare(a[1][a[1].length - 1]))[0]?.[0]
+    const usual = usualWith(m)
     const noticed = [left, usual ? `usually comes with ${usual}` : ''].filter(Boolean).join(' · ')
     out.push({ who: n, how: `${m.visits >= 2 ? 'a regular since' : 'met'} ${day(m.firstAt)} · ${here ? 'here now' : `last came ${day(m.lastAt)}`}`, noticed, now: here })
   }
