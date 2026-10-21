@@ -21,6 +21,8 @@ export type DoorMemory = {
   broughtDays?: Record<string, string[]>
   /** The hour of each day you came (one per day, last 6). The door notices when you come, not how often. */
   hours?: number[]
+  /** How you first came through this door: brought with a friend, on another door's word. The door keeps its own start. */
+  metThrough?: { by: string; with: string; at: number }
 }
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -74,6 +76,7 @@ export const useVestra = create<State>()(
         const s = get()
         const m = s.doors[door.id]
         const d = today()
+        const told = toldBy(s.doors, s.doorNames, s.companion, door.id)
         const heard = s.companion && !(m?.heard ?? []).includes(s.companion) ? [...(m?.heard ?? []), s.companion] : m?.heard ?? []
         const sameDay = m?.lastDay === d
         const prevDays = s.companion ? m?.broughtDays?.[s.companion] ?? (m?.broughtAt?.[s.companion] ? [new Date(m.broughtAt[s.companion]).toISOString().slice(0, 10)] : []) : []
@@ -90,13 +93,14 @@ export const useVestra = create<State>()(
           leftLog: m?.leftLog,
           broughtDays: s.companion ? { ...(m?.broughtDays ?? {}), [s.companion]: [...prevDays.filter((x) => x !== d), d].slice(-6) } : m?.broughtDays,
           hours: sameDay && m?.hours?.length ? m.hours : [...(m?.hours ?? []), new Date().getHours()].slice(-6),
+          metThrough: m?.metThrough ?? (!m?.visits && s.companion && told ? { by: told, with: s.companion, at: Date.now() } : undefined),
         }
         set({
           doors: { ...s.doors, [door.id]: next },
           doorNames: { ...s.doorNames, [door.id]: door.name },
           doorPlaces: { ...(s.doorPlaces ?? {}), [door.id]: { lat: door.lat, lng: door.lng } },
           hereId: door.id,
-          greeting: { doorId: door.id, text: greet(next, m, s.name, sameDay, heard !== (m?.heard ?? []) ? s.companion : '', toldBy(s.doors, s.doorNames, s.companion, door.id), again) },
+          greeting: { doorId: door.id, text: greet(next, m, s.name, sameDay, heard !== (m?.heard ?? []) ? s.companion : '', told, again) },
           companion: s.companion && heard !== m?.heard ? '' : s.companion,
         })
       },
@@ -195,7 +199,7 @@ function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, same
   // Back in the part of the day the door already knows you by: it says so instead of a plain "welcome back".
   const nowPart = partOf(new Date().getHours())
   const hi = usualPart(prev?.hours) === nowPart[2] ? `${HELLO[nowPart[2]]}, ${n}. right on time.` : `welcome back, ${n}.`
-  if (v === 2) return `${hi} a light is on for you`
+  if (v === 2) return `${hi} ${firstLight(prev).replace(/ here$/, "")}`
   if (v === 3) return `${hi} there's a plant by the door now`
   if (v === 4) return `${hi} you first came ${day(next.firstAt)}`
   const f = lastBrought(prev)
@@ -222,7 +226,7 @@ function promiseFor(m: DoorMemory) {
 /** The next day, the door shows what it kept ready for you, so returning has a visible reason before you arrive. */
 function waitingFor(m: DoorMemory, bringing = '') {
   const v = m.visits
-  if (v === 1) return 'a light is on for you here'
+  if (v === 1) return firstLight(m)
   if (v === 2) return 'a plant is waiting by the door'
   if (v === 3) return 'it remembers the day you first came'
   const f = lastBrought(m)
@@ -231,6 +235,12 @@ function waitingFor(m: DoorMemory, bringing = '') {
   if (f) return `it still asks after ${f}`
   const kept = m.left[m.left.length - 1]
   return kept ? `your ${CATCH_GLYPH[kept]} is still here` : 'your light here kept warm'
+}
+
+/** Day two's light. At a door you first walked into on another door's word, the light remembers that shared start. */
+function firstLight(m: DoorMemory | undefined) {
+  const t = m?.metThrough
+  return t ? `a light is on for you, since ${t.by} sent you with ${t.with}` : 'a light is on for you here'
 }
 
 /** The last person you brought to this door (only from your 4th visit on, so the early returns keep their own gifts). */
