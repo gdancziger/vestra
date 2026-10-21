@@ -34,3 +34,10 @@
 - **Refused:** a "doors waiting: 3" counter, push or "you haven't visited in X days" nudges, and gold on waiting doors (gold stays for the target and the main action).
 - **Verified:** tsc clean. /workspace/vestra-shots/v5-waiting.png shows the next day at Bar Tabac before arriving: "a light is on for you here". v5-arrive.png shows the greeting matching it: "welcome back, Gabe. a light is on for you".
 - **Next hour:** the merchant side, a regular-vs-stranger view of the same door.
+
+## 2026-10-21 00:25 ET (entry 6): the door has already heard of the person you bring
+- **Decision:** Entry 5 was verified, so nothing was left to finish. I deferred the merchant view a third time on purpose. Right now there's only one local user, so a merchant screen would show one person, and it needs shared state first. The weakest step of the loop was "bring someone": typing a friend's name changed nothing until you had already arrived.
+- **Shipped:** `doorSelf(m, you, bringing)` now returns `expecting`. While you're with someone and a door is your target, and that door hasn't heard of them yet, it shows "expecting Noa. Gabe told us" before you arrive. That appears on the pin label (soft lilac italics with a pulsing dot, no gold) and in the dock. On arrival it gives way to the existing greeting, "Noa, Gabe told us about you. come in".
+- **Refused:** a referral counter, "invite 3 friends" goals, share links or contacts import, and any reward for bringing someone.
+- **Verified:** tsc clean. /workspace/vestra-shots/v6-expecting.png shows Bar Tabac, a stranger door, expecting Noa. v6-arrive.png shows the greeting plus the promise of a light tomorrow.
+- **Next hour:** a door Noa has heard of should keep showing them when you come back alone ("Noa came with you Oct 21"), and the friend's name should carry to the next door you bring them to.

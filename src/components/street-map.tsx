@@ -38,8 +38,8 @@ function EdgeName({ pos, door }: { pos: P; door: Door }) {
   )
 }
 
-function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typeof useVestra.getState>['doors'][string] | undefined, says = '') {
-  const s = doorSelf(mem, name)
+function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typeof useVestra.getState>['doors'][string] | undefined, says = '', bringing = '') {
+  const s = doorSelf(mem, name, target && !says ? bringing : '')
   const cls = ['door', target ? 'is-target' : '', s.waiting ? 'is-waiting' : '', s.visits ? 'is-known' : '', s.regular ? 'is-regular' : ''].join(' ')
   const left = (mem?.left ?? []).slice(-3).map((k) => `<i>${CATCH_GLYPH[k]}</i>`).join('')
   const html = `
@@ -47,12 +47,12 @@ function doorIcon(door: Door, target: boolean, name: string, mem: ReturnType<typ
     ${s.light ? `<div class="door-light" style="--w:${s.warmth.toFixed(2)}"></div>` : ''}
     <div class="door-dot"></div>
     ${s.plant ? '<div class="door-plant">🌿</div>' : ''}
-    ${(target || s.visits) ? `<div class="door-label"><b>${door.name}</b>${says ? `<q class="says">${says.replace(/</g, '&lt;')}</q>` : ''}${s.visits ? `<small>${s.status}</small>` : ''}${s.promise ? `<small class="promise">${s.promise}</small>` : ''}${s.waiting && !says ? `<small class="waiting">${s.waiting}</small>` : ''}${s.fact ? `<small class="fact">${s.fact}</small>` : ''}${left ? `<span class="door-left">${left}</span>` : ''}${s.visits && mem?.heard.length ? `<small class="heard">heard of ${mem.heard.join(', ')}</small>` : ''}</div>` : ''}`
+    ${(target || s.visits) ? `<div class="door-label"><b>${door.name}</b>${says ? `<q class="says">${says.replace(/</g, '&lt;')}</q>` : ''}${s.visits ? `<small>${s.status}</small>` : ''}${s.promise ? `<small class="promise">${s.promise}</small>` : ''}${s.expecting ? `<small class="expecting">${s.expecting.replace(/</g, '&lt;')}</small>` : ''}${s.waiting && !says ? `<small class="waiting">${s.waiting}</small>` : ''}${s.fact ? `<small class="fact">${s.fact}</small>` : ''}${left ? `<span class="door-left">${left}</span>` : ''}${s.visits && mem?.heard.length ? `<small class="heard">heard of ${mem.heard.join(', ')}</small>` : ''}</div>` : ''}`
   return L.divIcon({ className: cls, html, iconSize: [14, 14], iconAnchor: [7, 7] })
 }
 
 export function StreetMap({ pos, doors }: { pos: P; doors: Door[] }) {
-  const { targetId, setTarget, doors: mem, name, picked, pick, greeting } = useVestra()
+  const { targetId, setTarget, doors: mem, name, picked, pick, greeting, companion } = useVestra()
   const day = new Date().toISOString().slice(0, 10)
   const catches = useMemo(() => catchesFor(pos, day), [pos, day])
   const taken = picked[day] ?? []
@@ -65,7 +65,7 @@ export function StreetMap({ pos, doors }: { pos: P; doors: Door[] }) {
       <Follow pos={pos} />
       <Circle center={[pos.lat, pos.lng]} radius={RING_M} pathOptions={{ color: '#7fa6ff', weight: 1.5, opacity: 0.55, fillColor: '#3a5cff', fillOpacity: 0.06, dashArray: '2 6' }} interactive={false} />
       {doors.map((d) => (
-        <Marker key={d.id} position={[d.lat, d.lng]} icon={doorIcon(d, d.id === targetId, name, mem[d.id], greeting?.doorId === d.id ? greeting.text : '')} zIndexOffset={d.id === targetId ? 1000 : mem[d.id] ? 500 : 0} eventHandlers={{ click: () => setTarget(d.id) }} />
+        <Marker key={d.id} position={[d.lat, d.lng]} icon={doorIcon(d, d.id === targetId, name, mem[d.id], greeting?.doorId === d.id ? greeting.text : '', companion)} zIndexOffset={d.id === targetId ? 1000 : mem[d.id] ? 500 : 0} eventHandlers={{ click: () => setTarget(d.id) }} />
       ))}
       {catches.filter((c) => !taken.includes(c.id)).map((c) => (
         <Marker key={c.id} position={[c.lat, c.lng]} icon={L.divIcon({ className: `catch catch-${c.kind}`, html: `<span>${CATCH_GLYPH[c.kind]}</span>`, iconSize: [26, 26], iconAnchor: [13, 13] })} eventHandlers={{ click: () => pick(c.id, c.kind) }} />

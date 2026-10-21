@@ -13,7 +13,8 @@ export function Chrome({ pos, doors }: { pos: P; doors: Door[] }) {
   const here = s.hereId ? doors.find((d) => d.id === s.hereId) ?? null : null
   const door = target ?? near[0] ?? null
   const mem = door ? s.doors[door.id] : undefined
-  const self = doorSelf(mem, s.name)
+  const isHereFor = (d: Door | null) => !!d && s.hereId === d.id
+  const self = doorSelf(mem, s.name, target && !isHereFor(door) ? s.companion : '')
   const dist = door ? Math.round(distM(pos, door)) : 0
   const inRing = dist <= RING_M
   const isHere = !!door && here?.id === door.id
@@ -55,6 +56,7 @@ export function Chrome({ pos, doors }: { pos: P; doors: Door[] }) {
         <div className="v">{door?.name ?? '—'}</div>
         <div className={'sub ' + (self.regular ? 'reg' : '')}>{self.status}</div>
         {isHere && s.greeting?.doorId === door?.id && <div className="line says">“{s.greeting.text}”</div>}
+        {!isHere && self.expecting && <div className="line expecting">{self.expecting}</div>}
         {!isHere && self.waiting && <div className="line waiting">{self.waiting}</div>}
         {isHere && self.promise && <div className="line promise">{self.promise}</div>}
         {self.lines.slice(0, isHere && s.greeting ? (self.promise ? 0 : 1) : 2).map((l) => <div key={l} className="line">{l}</div>)}

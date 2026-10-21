@@ -1,0 +1,16 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch()
+const ctx = await b.newContext({ viewport:{width:430,height:900}, geolocation:{latitude:40.6866,longitude:-73.9906}, permissions:['geolocation'] })
+const p = await ctx.newPage()
+await p.goto('http://127.0.0.1:8080'); await p.waitForTimeout(6000)
+await p.fill('.dock input','Gabe'); await p.press('.dock input','Enter')
+await p.click('.main'); await p.waitForTimeout(300)   // set target (nearest)
+await p.click('button.ghost'); await p.fill('.who input','Noa'); await p.press('.who input','Enter'); await p.waitForTimeout(500)
+await p.screenshot({ path:'/workspace/vestra-shots/v6-expecting.png' })
+const lab = await p.$eval('.is-target .door-label', e=>e.innerText).catch(()=>'')
+const dock = await p.$eval('.door-part', e=>e.innerText)
+await p.click('.main'); await p.waitForTimeout(500)   // arrive together
+await p.screenshot({ path:'/workspace/vestra-shots/v6-arrive.png' })
+const dock2 = await p.$eval('.door-part', e=>e.innerText)
+console.log(JSON.stringify({lab,dock,dock2}))
+await b.close()

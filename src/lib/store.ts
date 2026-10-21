@@ -97,7 +97,7 @@ export const useVestra = create<State>()(
 )
 
 /** What a door has become, from its memory. Each return adds one thing. */
-export function doorSelf(m: DoorMemory | undefined, you: string) {
+export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '') {
   const v = m?.visits ?? 0
   const lines: string[] = []
   if (v >= 1) lines.push(`knows you, ${you || 'friend'}`)
@@ -117,6 +117,8 @@ export function doorSelf(m: DoorMemory | undefined, you: string) {
     promise: m && m.lastDay === today() ? promiseFor(m) : '',
     /** On a later day, what this door has been keeping ready for you. Exactly what greet() will say when you arrive. */
     waiting: m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m) : '',
+    /** You're bringing someone here: the door has already heard of them before you arrive. */
+    expecting: bringing && !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}. ${you || 'a friend'} told us` : '',
     status: v === 0 ? 'stranger' : v === 1 ? 'known · 1 visit' : `regular · ${v} visits`,
     lines,
   }
