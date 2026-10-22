@@ -115,7 +115,7 @@ export const useVestra = create<State>()(
         set({
           carry: s.carry.filter((_, j) => j !== i),
           doors: { ...s.doors, [s.hereId]: { ...m, left: [...m.left, k].slice(-6), leftLog: log } },
-          greeting: { doorId: s.hereId, text: `your ${CATCH_GLYPH[k]} stays here, ${s.name || 'friend'}` },
+          greeting: { doorId: s.hereId, text: withF ? `the ${CATCH_GLYPH[k]} stays here, from you and ${withF}. ${withF} will find it next time` : `your ${CATCH_GLYPH[k]} stays here, ${s.name || 'friend'}` },
         })
       },
       placeDoors: (ds) => {
@@ -139,7 +139,7 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
   const keptG = m && m.left.length ? CATCH_GLYPH[m.left[m.left.length - 1]] : ''
   const waitingNow = m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m, withNow, hush) : ''
   const expecting = !bringing ? '' : !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}${told && !m?.visits ? ` and you, ${you || 'friend'}` : ''}. ${told || you || 'a friend'} told us`
-    : m?.broughtAt?.[bringing] && m.lastDay !== today() ? `${bringing} again. last here ${day(m.broughtAt[bringing])}` : ''
+    : m?.broughtAt?.[bringing] && m.lastDay !== today() ? (leftWith(m, bringing) ? `${bringing} again. the ${CATCH_GLYPH[leftWith(m, bringing)!.k]} you left together ${day(leftWith(m, bringing)!.at)} is still here` : `${bringing} again. last here ${day(m.broughtAt[bringing])}`) : ''
   const w = withYou(m)
   const n = you || 'friend'
   // The door's one noticed thing about you, with your name: not "knows you" (the status already says it met you).
@@ -151,7 +151,7 @@ export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', 
   const lastF = m?.broughtAt ? Object.entries(m.broughtAt).sort((a, b) => b[1] - a[1])[0]?.[0] : ''
   const noticed = !m || v < 1 ? null
     : usual && !said.includes(usual) ? { line: `${n}, who usually comes with ${usual}`, f: usual }
-    : keptG && !said.includes(keptG) ? { line: `${n}, who left the ${keptG}${mine ? ' ' + when(mine.at) : ''}`, g: keptG }
+    : keptG && !said.includes(keptG) ? { line: `${n}, who left the ${keptG}${mine?.with && !said.includes(mine.with) ? ` with ${mine.with}` : ''}${mine ? ' ' + when(mine.at) : ''}`, g: keptG, ...(mine?.with ? { f: mine.with } : {}) }
     : lastF && w && !said.includes(lastF) ? { line: `${n}, who came with ${lastF} ${w.endsWith('today') ? 'today' : w.split(' ').slice(-2).join(' ')}`, f: lastF }
     : comesWhen(m) ? { line: `${n}, ${comesWhen(m)}` }
     : { line: `knows you by name, ${n}` }
@@ -193,7 +193,7 @@ function greet(next: DoorMemory, prev: DoorMemory | undefined, you: string, same
   const n = you || 'friend'
   // A door told about your friend by another door was told about you too: at a door new to you both, it greets you both.
   if (friend) return `${friend}, ${told || n} told us about you.${told && !prev?.visits ? ` you too, ${n}.` : ''} come in`
-  if (again) return `${again}, good to see you again. you too, ${n}`
+  if (again) { const t = leftWith(prev, again); return `${again}, good to see you again. you too, ${n}${t ? `. the ${CATCH_GLYPH[t.k]} you left together is still here` : ''}` }
   if (sameDay && prev) return `still here, ${n}`
   const v = next.visits
   if (v === 1) return `nice to meet you, ${n}. we'll remember`
@@ -254,6 +254,12 @@ export function friendVoices(doors: Record<string, DoorMemory>, targetId: string
     if (!owner[f] || w > owner[f][1]) owner[f] = [id, w]
   }
   return (id: string) => Object.keys(doors[id]?.broughtAt ?? {}).filter((f) => owner[f]?.[0] !== id).join(',')
+}
+
+/** The last thing you left here with this friend beside you, if the door still keeps it. Left together, found together. */
+function leftWith(m: DoorMemory | undefined, f: string) {
+  const e = [...(m?.leftLog ?? [])].reverse().find((x) => x.with === f)
+  return e && m!.left.includes(e.k) ? e : undefined
 }
 
 /** The last person you brought to this door (only from your 4th visit on, so the early returns keep their own gifts). */
