@@ -320,9 +320,12 @@ export function doorKnows(m: DoorMemory | undefined, you: string, expecting = ''
     const here = m.lastDay === today()
     const mine = log[log.length - 1]
     const lastKind = m.left[m.left.length - 1]
-    const left = mine ? `left a ${CATCH_GLYPH[mine.k]} ${day(mine.at)}` : lastKind ? `left a ${CATCH_GLYPH[lastKind]}` : ''
+    // Left together reads as together on the door's side too, so the merchant's view matches what the door tells you.
     // Once someone has come with you on two different days, the door knows them as your usual company.
     const usual = usualWith(m)
+    // Name the friend once per row: if they're your usual company, that part names them.
+    const leftWithF = mine?.with && mine.with !== usual ? ` with ${mine.with}` : ''
+    const left = mine ? `left a ${CATCH_GLYPH[mine.k]}${leftWithF} ${day(mine.at)}` : lastKind ? `left a ${CATCH_GLYPH[lastKind]}` : ''
     const noticed = [left, usual ? `usually comes with ${usual}` : ''].filter(Boolean).join(' · ') || comesWhen(m).replace(/^who /, '')
     out.push({ who: n, how: `${m.visits >= 2 ? 'a regular since' : 'met'} ${day(m.firstAt)} · ${here ? 'here now' : `last came ${day(m.lastAt)}`}`, noticed, now: here })
   }
@@ -332,7 +335,7 @@ export function doorKnows(m: DoorMemory | undefined, you: string, expecting = ''
     const ds = m?.broughtDays?.[f] ?? []
     const when = ds.length >= 2 ? ds.slice(-2).map(isoDay).join(' and ') : t ? day(t) : ''
     const coming = expecting === f && m?.lastDay !== today()
-    out.push({ who: f, how: coming ? `coming again with ${n} · last here ${when}` : t ? `came with ${n} ${when}` : `heard of from ${n}`, noticed: theirs ? `was here when the ${CATCH_GLYPH[theirs.k]} was left` : '', now: coming || undefined })
+    out.push({ who: f, how: coming ? `coming again with ${n} · last here ${when}` : t ? `came with ${n} ${when}` : `heard of from ${n}`, noticed: theirs ? `left the ${CATCH_GLYPH[theirs.k]} with ${n} ${day(theirs.at)}${m!.left.includes(theirs.k) ? ', still by the door' : ''}` : '', now: coming || undefined })
   }
   if (expecting && told && !m?.visits) out.push({ who: n, how: `expected with ${expecting}. ${told} told us`, now: true })
   if (expecting && !(m?.heard ?? []).includes(expecting)) out.push({ who: expecting, how: `expected. ${told || n} told us`, now: true })
