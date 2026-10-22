@@ -197,3 +197,9 @@
 - **Refused:** a "shared items" list per pair, and showing every past catch in the door's view (it keeps the last one, like the door does).
 - **Verified:** tsc clean. shoot28.mjs walks arriving with Noa, leaving the 🌿, then next day alone with the door's view open: "Gabe … left a 🌿 Oct 20 · usually comes with Noa | Noa came with Gabe … left the 🌿 with Gabe Oct 20, still by the door". With the plant gone, Noa's row drops "still by the door". shoot22.mjs re-run gives the same output as before. Screenshot: /workspace/vestra-shots/v28-doorview.png.
 - **Next hour:** the door's view is the only merchant surface, and it hides behind a small "how the door sees it" link. Check that, at the door, the merchant-facing view shows who's here now first (the "now" rows), so a real person behind the counter could greet you by name from it at a glance.
+
+## 29 — Oct 21, 2026, ~11:20 PM ET — Vestra is on the web
+- **Decision:** Stop tuning words; put the game on a real phone. Deployed to GitHub Pages: https://gdancziger.github.io/vestra/ (repo https://github.com/gdancziger/vestra, public).
+- **Shipped:** Vite `base: '/vestra/'` for builds only (dev stays `/`). index.html: title Vestra, viewport-fit=cover, theme-color #060b1e, iOS web-app metas, manifest + SVG/192/512 icons (Add to Home Screen). CSS: 100dvh fixed full-screen body, no overscroll, dock respects safe-area inset. Geolocation was already watchPosition(high accuracy) with camera following; Brooklyn fallback is only used when location is denied/unavailable. Overpass runs in the phone's browser; the 5 Smith St doors stay only as the fallback.
+- **Deploy:** gh-pages branch built from dist (the gh token lacks `workflow` scope, so no Actions workflow). Redeploy = `npm run build`, push dist to gh-pages.
+- **Verified:** tsc clean, build clean, index/JS/manifest return 200 live; /workspace/vestra-shots/v29-live.png shows the live map with "Go to Bar Tabac", no page errors, no scrollbars.
