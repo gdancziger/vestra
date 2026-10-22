@@ -132,11 +132,12 @@ export const useVestra = create<State>()(
 
 /** What a door has become, from its memory. Each return adds one thing. */
 /** `withNow`: who is walking with you right now. No door asks after someone standing beside you, even a door you aren't headed to. */
-export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', told = '', withNow = bringing) {
+/** `hush`: a friend another door on the map is already naming. Only one door at a time asks after the same person. */
+export function doorSelf(m: DoorMemory | undefined, you: string, bringing = '', told = '', withNow = bringing, hush = '') {
   const v = m?.visits ?? 0
   const lines: string[] = []
   const keptG = m && m.left.length ? CATCH_GLYPH[m.left[m.left.length - 1]] : ''
-  const waitingNow = m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m, withNow) : ''
+  const waitingNow = m && m.visits >= 1 && m.lastDay !== today() ? waitingFor(m, withNow, hush) : ''
   const expecting = !bringing ? '' : !(m?.heard ?? []).includes(bringing) ? `expecting ${bringing}${told && !m?.visits ? ` and you, ${you || 'friend'}` : ''}. ${told || you || 'a friend'} told us`
     : m?.broughtAt?.[bringing] && m.lastDay !== today() ? `${bringing} again. last here ${day(m.broughtAt[bringing])}` : ''
   const w = withYou(m)
@@ -224,23 +225,35 @@ function promiseFor(m: DoorMemory) {
 }
 
 /** The next day, the door shows what it kept ready for you, so returning has a visible reason before you arrive. */
-function waitingFor(m: DoorMemory, bringing = '') {
+function waitingFor(m: DoorMemory, bringing = '', hush = '') {
   const v = m.visits
-  if (v === 1) return firstLight(m)
+  if (v === 1) return firstLight(m, hush)
   if (v === 2) return 'a plant is waiting by the door'
   if (v === 3) return 'it remembers the day you first came'
   const f = lastBrought(m)
   // You're bringing that very friend: the door doesn't ask after someone walking in with you ("Noa again" says it).
   if (f && f === bringing) return ''
-  if (f) return `it still asks after ${f}`
+  // Another door is already naming this friend today: this one keeps its own gift instead of pulling on them too.
+  if (f && !hush.split(',').includes(f)) return `it still asks after ${f}`
   const kept = m.left[m.left.length - 1]
   return kept ? `your ${CATCH_GLYPH[kept]} is still here` : 'your light here kept warm'
 }
 
 /** Day two's light. At a door you first walked into on another door's word, the light remembers that shared start. */
-function firstLight(m: DoorMemory | undefined) {
+function firstLight(m: DoorMemory | undefined, hush = '') {
   const t = m?.metThrough
-  return t ? `a light is on for you, since ${t.by} sent you with ${t.with}` : 'a light is on for you here'
+  // If another door is naming the friend right now, this one still remembers who sent you, without pulling on them too.
+  return t ? `a light is on for you, since ${t.by} sent you${hush.split(',').includes(t.with) ? '' : ` with ${t.with}`}` : 'a light is on for you here'
+}
+
+/** For each friend, the one door that names them on the map: the door the dock is showing (your target, or the nearest door) if it knows them, else the door you were last there with them. */
+export function friendVoices(doors: Record<string, DoorMemory>, targetId: string | null) {
+  const owner: Record<string, [string, number]> = {}
+  for (const [id, m] of Object.entries(doors)) for (const [f, t] of Object.entries(m.broughtAt ?? {})) {
+    const w = id === targetId ? Infinity : t + (m.metThrough?.with === f ? 1 : 0)
+    if (!owner[f] || w > owner[f][1]) owner[f] = [id, w]
+  }
+  return (id: string) => Object.keys(doors[id]?.broughtAt ?? {}).filter((f) => owner[f]?.[0] !== id).join(',')
 }
 
 /** The last person you brought to this door (only from your 4th visit on, so the early returns keep their own gifts). */
